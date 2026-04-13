@@ -18,14 +18,14 @@ def dir(path):
             r += f"[FILE]{f}\n"
         return r
     except Exception as e:
-        return e
+        return str(e)
 
 def read(path):
     try:
         with open(path, 'r', encoding = 'utf-8') as f:
             return f.read()
     except Exception as e:
-        return e
+        return str(e)
 
 def write(path, content):
     try:
@@ -33,7 +33,7 @@ def write(path, content):
             f.write(content)
         return 'write complete'
     except Exception as e:
-        return e
+        return str(e)
 
 def delete(path):
     try:
@@ -43,7 +43,7 @@ def delete(path):
             os.remove(path)
         return 'delete complete'
     except Exception as e:
-        return e
+        return str(e)
 
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
@@ -69,4 +69,4 @@ def backup(src_dir, dst_dir='./bak/'):
                 shutil.copy2(src_path, dst_path)
         return 'copy complete'
     except Exception as e:
-        return e
+        return str(e)
