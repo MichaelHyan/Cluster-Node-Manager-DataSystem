@@ -49,7 +49,7 @@ messages = [
 ]
 msg = nodelist[0].message
 tic = 1
-def main(cmd):
+def CNMD(cmd):
     global msg
     global msg_stack
     global messages
@@ -232,7 +232,7 @@ def main(cmd):
 #直接使用方式
 while True:
     cmd = input()
-    main(cmd)
+    CNMD(cmd)
     #print(msg)
     #for i in nodelist:
     #    print(i.id,i.message)
