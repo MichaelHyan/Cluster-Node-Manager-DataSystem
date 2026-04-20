@@ -13,14 +13,22 @@ def reply(message):
             stream=False
         )
         try:
-            result = {
-                'content':response.choices[0].message.content,
-                'reasoning_content':response.choices[0].message.reasoning_content
-                }
-        except:
-            result = {
-                'content':response.choices[0].message.content
-                }
+            if response.choices and len(response.choices) > 0:
+                message = response.choices[0].message
+                if hasattr(message, 'content'):
+                    content = message.content
+                if hasattr(message, 'reasoning_content'):
+                    reasoning_content = message.reasoning_content
+                else:
+                    reasoning_content = None 
+        except Exception as e:
+            print(str(e))
+            return None
+        result = {
+            'content':content,
+            'reasoning_content':reasoning_content
+        }
         return result
     except Exception as e:
-        return str(e)
+        print(str(e))
+        return None

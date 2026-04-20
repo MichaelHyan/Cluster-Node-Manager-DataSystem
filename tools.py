@@ -70,3 +70,23 @@ def backup(src_dir, dst_dir='./bak/'):
         return 'copy complete'
     except Exception as e:
         return str(e)
+import os
+
+def list_dir(path):
+    response = ''
+    response += f"[DIR] {path}\n"
+    try:
+        with os.scandir(path) as entries:
+            for entry in entries:
+                response += f" - [DIR] {entry.name}" if entry.is_dir() else f" - [FILE] {entry.name}\n"
+    except PermissionError:
+        pass
+    for dirpath, dirnames, filenames in os.walk(path):
+        if dirpath == path:
+            continue
+        response += f"[DIR] {dirpath}"
+        for dirname in dirnames:
+            response += f" - [FILE] {dirname}"
+        for filename in filenames:
+            response += f" - [FILE] {filename}"
+    return response
