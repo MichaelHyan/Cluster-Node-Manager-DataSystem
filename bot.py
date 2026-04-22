@@ -2,7 +2,7 @@ import os,json
 from openai import OpenAI
 def reply(message):
     try:
-        with open('config.json') as f:
+        with open('config.json',encoding='utf-8') as f:
             config = json.load(f)
         client = OpenAI(
             api_key=config['API_KEY'],

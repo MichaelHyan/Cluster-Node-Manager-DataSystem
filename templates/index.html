@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>局域网通讯-CNMD控制台集成系统</title>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #4caf50;
+            --danger-color: #f44336;
+            --warning-color: #ff9800;
+            --info-color: #2196f3;
+            --light-bg: rgba(255, 255, 255, 0.95);
+            --dark-text: #333;
+            --light-text: #666;
+            --border-color: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--light-bg);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            color: var(--dark-text);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .connection-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .connection-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .info-item strong {
+            display: block;
+            margin-bottom: 5px;
+            color: var(--primary-color);
+        }
+
+        .connection-controls {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .connection-controls input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .connection-controls input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .connection-controls button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .btn-connect {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .btn-disconnect {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .btn-copy {
+            background: var(--info-color);
+            color: white;
+        }
+
+        .btn-clear {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .btn-connect:hover, .btn-disconnect:hover,
+        .btn-copy:hover, .btn-clear:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .chat-section {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+
+        .messages-area {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 500px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 12px;
+            max-width: 80%;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .message.local {
+            background: #e3f2fd;
+            margin-left: auto;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.remote {
+            background: #f3e5f5;
+            margin-right: auto;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.system {
+            background: #fff3e0;
+            margin: 10px auto;
+            text-align: center;
+            max-width: 90%;
+            font-size: 0.9em;
+            color: var(--light-text);
+        }
+
+        .message-info {
+            font-size: 0.8em;
+            color: var(--light-text);
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .message-content {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-area input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .input-area button {
+            padding: 12px 24px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .input-area button:hover {
+            background: #5a6fd8;
+        }
+
+        .input-area button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .sidebar {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .connected-peers {
+            margin-bottom: 20px;
+        }
+
+        .peer-item {
+            background: white;
+            padding: 10px 15px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border-left: 4px solid var(--success-color);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .instructions {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .instructions h4 {
+            color: var(--warning-color);
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            padding-left: 20px;
+            margin-bottom: 10px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        .status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .status.connected {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .status.disconnected {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 15px;
+                border-radius: 10px;
+            }
+
+            .chat-section {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .connection-info {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .connection-controls {
+                flex-direction: column;
+            }
+
+            .connection-controls input {
+                min-width: 100%;
+            }
+
+            .messages-area {
+                max-height: 400px;
+                padding: 15px;
+            }
+
+            .message {
+                max-width: 90%;
+                padding: 10px 12px;
+            }
+
+            .sidebar {
+                order: -1;
+            }
+
+            .input-area {
+                flex-direction: column;
+            }
+
+            .input-area button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .connection-section {
+                padding: 15px;
+            }
+
+            .messages-area {
+                max-height: 350px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>局域网通讯系统</h1>
+        </div>
+
+        <div class="connection-section">
+            <div class="connection-info">
+                <div class="info-item">
+                    <strong>您的ID</strong>
+                    <span id="clientId">未连接</span>
+                </div>
+                <div class="info-item">
+                    <strong>连接状态</strong>
+                    <div id="connectionStatus" class="status disconnected">未连接</div>
+                </div>
+            </div>
+
+            <div class="connection-controls">
+                <button class="btn-clear" onclick="clearMessages()">清空消息</button>
+            </div>
+        </div>
+
+        <div class="chat-section">
+            <div class="messages-area">
+                <div class="messages-container" id="messagesContainer"></div>
+                <div class="input-area">
+                    <input type="text" id="messageInput" placeholder="输入消息..." onkeypress="handleKeyPress(event)">
+                    <button id="sendBtn" onclick="sendMessage()">发送</button>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="connected-peers">
+                    <h3>在线用户</h3>
+                    <div id="usersList"></div>
+                </div>
+                <div class="instructions">
+                    <h4>使用说明</h4>
+                    <ol>
+                        <li>系统会自动连接到服务器</li>
+                        <li>在消息输入框中输入内容并发送</li>
+                        <li>消息会发送给所有在线用户</li>
+                        <li>系统消息会显示在聊天区域</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        let socket = null;
+        let myClientId = null;
+        let isConnected = false;
+
+        function connect() {
+            socket = io();
+
+            socket.on('connect', function() {
+                isConnected = true;
+                updateConnectionStatus(true);
+                console.log('已连接到服务器');
+            });
+
+            socket.on('connected', function(data) {
+                myClientId = data.client_id;
+                document.getElementById('clientId').textContent = myClientId;
+                addSystemMessage(data.message);
+            });
+
+            socket.on('user_joined', function(data) {
+                addSystemMessage(data.message);
+                updateUsersList();
+            });
+
+            socket.on('user_left', function(data) {
+                addSystemMessage(data.message);
+                updateUsersList();
+            });
+
+            socket.on('new_message', function(data) {
+                addMessage(data);
+            });
+
+            socket.on('users_list', function(data) {
+                displayUsers(data.users);
+            });
+
+            socket.on('disconnect', function() {
+                isConnected = false;
+                updateConnectionStatus(false);
+                addSystemMessage('已断开连接');
+            });
+        }
+
+        function disconnect() {
+            if (socket && isConnected) {
+                socket.disconnect();
+                addSystemMessage('已断开连接');
+            }
+        }
+
+        function sendMessage() {
+            if (!socket || !isConnected) {
+                return;
+            }
+
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+
+            if (!message) {
+                return;
+            }
+
+            socket.emit('send_message', {
+                message: message
+            });
+
+            messageInput.value = '';
+        }
+
+        function addMessage(data) {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${data.user_id === myClientId ? 'local' : 'remote'}`;
+
+            const time = new Date(data.timestamp).toLocaleTimeString();
+            messageDiv.innerHTML = `
+                <div class="message-info">
+                    <span>用户 ${data.user_id}</span>
+                    <span>${time}</span>
+                </div>
+                <div class="message-content">${escapeHtml(data.content)}</div>
+            `;
+
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function addSystemMessage(text) {
+            const container = document.getElementById('messagesContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message system';
+            messageDiv.textContent = text;
+            container.appendChild(messageDiv);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function displayUsers(users) {
+            const usersList = document.getElementById('usersList');
+            usersList.innerHTML = '';
+
+            users.forEach(user => {
+                const userDiv = document.createElement('div');
+                userDiv.className = 'peer-item';
+                userDiv.textContent = `用户 ${user.id} ${user.id === myClientId ? '(你)' : ''}`;
+                usersList.appendChild(userDiv);
+            });
+        }
+
+        function updateUsersList() {
+            if (socket && isConnected) {
+                socket.emit('get_users');
+            }
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusDiv = document.getElementById('connectionStatus');
+            const disconnectBtn = document.querySelector('.btn-disconnect');
+            
+            if (connected) {
+                statusDiv.className = 'status connected';
+                statusDiv.textContent = '已连接';
+                disconnectBtn.disabled = false;
+            } else {
+                statusDiv.className = 'status disconnected';
+                statusDiv.textContent = '未连接';
+                disconnectBtn.disabled = true;
+            }
+        }
+
+        function enableChatControls(enabled) {
+            const messageInput = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            
+            messageInput.disabled = !enabled;
+            sendBtn.disabled = !enabled;
+        }
+
+        function clearMessages() {
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '';
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 页面加载时自动连接
+        window.onload = function() {
+            connect();
+        };
+    </script>
+</body>
+</html>
