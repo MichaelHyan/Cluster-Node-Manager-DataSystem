@@ -10,19 +10,13 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# 存储在线用户
 online_users = {}
 
-# 创建 CNMD 实例
 cnm = CNMD.CNMD()
-
-# 存储接收到的消息队列
 msg_queue = []
 
-# 线程锁
 queue_lock = threading.Lock()
 
-# 命令开始处理的时间
 cmd_start_time = None
 
 @app.route('/')
@@ -45,7 +39,6 @@ def handle_connect():
         'message': '连接成功'
     })
 
-    # 广播用户列表更新
     broadcast_user_list()
 
 @socketio.on('disconnect')
@@ -78,7 +71,7 @@ def handle_send_message(data):
         'id': str(uuid.uuid4())[:8],
         'user_id': user.get('id', 'unknown'),
         'device_type': user.get('device_type', 'unknown'),
-        'content': message[:1000],  # 限制消息长度
+        'content': message[:1000],
         'timestamp': datetime.now().isoformat()
     }
 
@@ -118,20 +111,11 @@ def msg_processor():
             if msg_queue:
                 cmd = msg_queue.pop(0)
                 cnm.CNMD(cmd)
-                # 记录命令开始处理的时间
                 cmd_start_time = time.time()
 
-        # 检查是否有命令正在处理且超过3分钟
         if cmd_start_time is not None and (time.time() - cmd_start_time > 180):
-            # 强制停止CNMD
-            try:
-                cnm.stop()  # 假设CNMD有stop方法
-            except:
-                pass
-            # 在消息队列中加入超时信息
             with queue_lock:
-                cnm.msg_stack.append("命令执行超时，已强制停止")
-            # 清除开始时间标记
+                cnm.msg_stack.append("警告：命令执行超时")
             cmd_start_time = None
 
         time.sleep(0.5)
@@ -140,11 +124,9 @@ if __name__ == '__main__':
     print("局域网通讯系统已启动")
     print("访问地址: http://localhost:5000")
 
-    # 启动消息发送线程
     sender_thread = threading.Thread(target=msg_sender, daemon=True)
     sender_thread.start()
 
-    # 启动消息处理线程
     processor_thread = threading.Thread(target=msg_processor, daemon=True)
     processor_thread.start()
 
