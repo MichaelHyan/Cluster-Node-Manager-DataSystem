@@ -22,6 +22,7 @@ class CNMD():
         ]
         self.msg = self.nodelist[0].message
         self.tic = 1
+        self.allow_reasoning = False
         self.help_text = '''可用命令：
 1. 节点操作 (#node)
 #node save <节点名称>      - 保存当前对话状态到指定节点
@@ -29,9 +30,11 @@ class CNMD():
 #node list                - 列出所有已保存的节点
 #node backward <轮数>     - 回退指定轮数的对话（默认回退1轮）
 2. 系统命令
-#backup                  - 备份当前工作目录
-#help                    - 显示此帮助信息
-
+#backup                   - 备份当前工作目录
+#help                     - 显示此帮助信息
+3. Agent命令
+#bot reasoning True/False - 开关返回思考内容
+#bot reset                - 清空记录
 使用示例：
 #node save important_conversation
 #node load important_conversation
@@ -42,66 +45,101 @@ class CNMD():
 - 节点名称可以是任意字符串，用于标识保存的对话状态
 - backward命令用于撤销最近的对话轮次
 - 备份文件会保存在备份目录中'''
-        
-    def CNMD(self,cmd):
-        cmd_check = ''
-        if cmd[0] == '#':
-            cmd = cmd.split()
-            if cmd[0] == '#node':
-                if cmd[1] == 'save':
-                    for i in self.nodelist:
-                        if i.id == cmd[2]:
-                            i.message = copy.deepcopy(self.msg)
-                            self.msg_stack.append(f'[D] node [{i.id}] overwrite')
-                            return
-                    self.nodelist.append(node.node())
-                    self.nodelist[-1].id = cmd[2]
-                    self.nodelist[-1].message = copy.deepcopy(self.msg)
-                    self.msg_stack.append(f'[D] [{cmd[2]}] save complete')
-                    return
-                elif cmd[1] == 'load':
-                    for i in self.nodelist:
-                        if i.id == cmd[2]:
-                            self.msg = copy.deepcopy(i.message)
-                            self.msg_stack.append('[D] load complete')
-                            return
-                    self.msg_stack.append('[D] node not found')
-                    return
-                elif cmd[1] == 'list':
-                    self.msg_stack.append('[D] node list:\n' + '\n'.join([i.id for i in self.nodelist]))
-                    return
-                elif cmd[1] == 'backward':
-                    if len(self.msg) == 1:
-                        self.msg_stack.append('[D] unable to backward')
+    
+    def user_command(self,cmd):
+        cmd = cmd.split()
+        if cmd[0] == '#node':
+            if cmd[1] == 'save':
+                for i in self.nodelist:
+                    if i.id == cmd[2]:
+                        i.message = copy.deepcopy(self.msg)
+                        self.msg_stack.append(f'[D] node [{i.id}] overwrite')
                         return
-                    for i in self.nodelist:
-                        if i.id == 'temp':
-                            i.message = copy.deepcopy(self.msg)
-                        else:
-                            self.nodelist.append(node.node())
-                            self.nodelist[-1].id = 'temp'
-                            self.nodelist[-1].message = copy.deepcopy(self.msg)
-                        try:
-                            self.msg = self.msg[:-2*int(cmd[2])]
-                            self.msg_stack.append(f'[D] backward {cmd[2]} complete')
-                            return
-                        except:
-                            self.msg = self.msg[:-2]
-                            self.msg_stack.append('[D] backward complete')
-                            return
+                self.nodelist.append(node.node())
+                self.nodelist[-1].id = cmd[2]
+                self.nodelist[-1].message = copy.deepcopy(self.msg)
+                self.msg_stack.append(f'[D] [{cmd[2]}] save complete')
+                return
+            elif cmd[1] == 'load':
+                for i in self.nodelist:
+                    if i.id == cmd[2]:
+                        self.msg = copy.deepcopy(i.message)
+                        self.msg_stack.append('[D] load complete')
+                        return
+                self.msg_stack.append('[D] node not found')
+                return
+            elif cmd[1] == 'list':
+                self.msg_stack.append('[D] node list:\n' + '\n'.join([i.id for i in self.nodelist]))
+                return
+            elif cmd[1] == 'backward':
+                if len(self.msg) == 1:
+                    self.msg_stack.append('[D] unable to backward')
+                    return
+                for i in self.nodelist:
+                    if i.id == 'temp':
+                        i.message = copy.deepcopy(self.msg)
+                    else:
+                        self.nodelist.append(node.node())
+                        self.nodelist[-1].id = 'temp'
+                        self.nodelist[-1].message = copy.deepcopy(self.msg)
+                    try:
+                        self.msg = self.msg[:-2*int(cmd[2])]
+                        self.msg_stack.append(f'[D] backward {cmd[2]} complete')
+                        return
+                    except:
+                        self.msg = self.msg[:-2]
+                        self.msg_stack.append('[D] backward complete')
+                        return
+            else:
+                self.msg_stack.append('[D] command not found')
+                return
+        elif cmd[0] == '#help':
+            self.msg_stack.append(self.help_text)
+            return
+        elif cmd[0] == '#bot':
+            if cmd[1] == 'reasoning':
+                if cmd[2] == 'on' or cmd[2] == 'true' or cmd[2] == 'True' or cmd[2] == '1':
+                    self.allow_reasoning = True
+                    self.msg_stack.append('[D] bot reasoning on')
+                elif cmd[2] == 'off' or cmd[2] == 'false' or cmd[2] == 'False' or cmd[2] == '0':
+                    self.allow_reasoning = False
+                    self.msg_stack.append('[D] bot reasoning off')
                 else:
                     self.msg_stack.append('[D] command not found')
                     return
-            elif cmd[0] == '#help':
-                self.msg_stack.append(self.help_text)
-                return
-            elif cmd[0] == '#backup':
-                fileedit.backup(self.config['base_path'])
-                self.msg_stack.append('[D] backup created')
+            elif cmd[1] == 'reset':
+                self.TIME_STAMP = round(time.time())
+                self.msg_stack = []
+                self.nodelist = []
+                self.nodelist.append(node.node())
+                self.nodelist[0].id = 'init'
+                self.nodelist[0].message = [0]
+                self.messages = [
+                    {
+                        "role":"system",
+                        "content":self.prompt
+                    }
+                ]
+                self.msg = self.nodelist[0].message
+                self.tic = 1
+                self.msg_stack.append('[D] bot reset')
                 return
             else:
                 self.msg_stack.append('[D] command not found')
                 return
+        elif cmd[0] == '#backup':
+            fileedit.backup(self.config['base_path'])
+            self.msg_stack.append('[D] backup created')
+            return
+        else:
+            self.msg_stack.append('[D] command not found')
+            return
+        
+    def CNMD(self,cmd):
+        cmd_check = ''
+        if cmd[0] == '#':
+            self.user_command(cmd)
+            return
         while True:
             if False:#此部分尚不稳定
             #if cmd[0] == '/':
@@ -135,6 +173,8 @@ class CNMD():
             if response:
                 content = response.get('content')
                 reasoning_content = response.get('reasoning_content')
+                if reasoning_content and self.allow_reasoning:
+                    self.msg_stack.append(f'reasoning: {reasoning_content}')
             else:
                 content = '[D] response failed'
                 reasoning_content = '[D] response failed'

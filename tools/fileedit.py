@@ -22,6 +22,10 @@ def dir(path):
 
 def read(path):
     try:
+        # 检查文件大小
+        file_size = os.path.getsize(path)
+        if file_size > 100 * 1024 * 1024:  # 100MB限制
+            return f'[ERROR] 文件过大 ({file_size} bytes)，超过100MB限制，无法读取'
         with open(path, 'r', encoding = 'utf-8') as f:
             return f.read()
     except Exception as e:
@@ -29,6 +33,10 @@ def read(path):
 
 def write(path, content):
     try:
+        # 检查内容大小
+        content_size = len(content.encode('utf-8'))
+        if content_size > 100 * 1024 * 1024:  # 100MB限制
+            return f'[ERROR] 内容过大 ({content_size} bytes)，超过100MB限制，无法写入'
         with open(path, 'w', encoding = 'utf-8') as f:
             f.write(content)
         return 'write complete'

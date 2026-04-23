@@ -68,8 +68,10 @@ def handle_send_message(data):
     if not message:
         return
 
-    with queue_lock:
-        msg_queue.append(message)
+    stripped_msg = message.strip()
+    if stripped_msg.startswith("@bot") or stripped_msg.startswith("#"):
+        with queue_lock:
+            msg_queue.append(message)
 
     user = online_users.get(request.sid, {})
     message_data = {
