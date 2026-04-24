@@ -26,20 +26,32 @@ def index():
 @socketio.on('connect')
 def handle_connect():
     """处理客户端连接"""
-    client_id = str(uuid.uuid4())[:8]
-    online_users[request.sid] = {
-        'id': client_id,
-        'sid': request.sid,
-        'device_type': request.args.get('device_type', 'desktop'),
-        'connected_at': datetime.now().isoformat()
-    }
+    try:
+        client_id = str(uuid.uuid4())[:8]
+        device_type = request.args.get('device_type', 'desktop')
+        
+        online_users[request.sid] = {
+            'id': client_id,
+            'sid': request.sid,
+            'device_type': device_type,
+            'connected_at': datetime.now().isoformat(),
+            'custom_id': client_id,
+            'bubble_color': '#e3f2fd'
+        }
 
-    emit('connected', {
-        'client_id': client_id,
-        'message': '连接成功'
-    })
+        print(f"用户 {client_id} 已连接 (设备类型: {device_type})")
+        
+        emit('connected', {
+            'client_id': client_id,
+            'custom_id': client_id,
+            'message': f'连接成功！您的ID是: {client_id}'
+        }, room=request.sid)
 
-    broadcast_user_list()
+        broadcast_user_list()
+        
+    except Exception as e:
+        print(f"连接处理错误: {e}")
+        emit('error', {'message': '连接处理失败'}, room=request.sid)
 
 @socketio.on('disconnect')
 def handle_disconnect():
@@ -64,13 +76,20 @@ def handle_send_message(data):
     stripped_msg = message.strip()
     if stripped_msg.startswith("@bot") or stripped_msg.startswith("#"):
         with queue_lock:
-            msg_queue.append(message)
+            if stripped_msg.startswith("@bot"):
+                processed_msg = stripped_msg[4:].strip()
+            else:
+                processed_msg = stripped_msg            
+            msg_queue.append(processed_msg)
+
 
     user = online_users.get(request.sid, {})
     message_data = {
         'id': str(uuid.uuid4())[:8],
         'user_id': user.get('id', 'unknown'),
+        'custom_id': user.get('custom_id', user.get('id', 'unknown')),
         'device_type': user.get('device_type', 'unknown'),
+        'bubble_color': user.get('bubble_color', '#e3f2fd'),
         'content': message[:1000],
         'timestamp': datetime.now().isoformat()
     }
@@ -82,6 +101,90 @@ def handle_get_users():
     """获取在线用户列表"""
     users_list = list(online_users.values())
     emit('users_list', {'users': users_list})
+
+@socketio.on('update_custom_id')
+def handle_update_custom_id(data):
+    """更新用户自定义ID"""
+    try:
+        custom_id = data.get('custom_id', '').strip()
+        
+        if not custom_id:
+            emit('custom_id_updated', {
+                'success': False,
+                'message': '自定义ID不能为空'
+            }, room=request.sid)
+            return
+            
+        if len(custom_id) > 20:
+            emit('custom_id_updated', {
+                'success': False,
+                'message': '自定义ID长度不能超过20个字符'
+            }, room=request.sid)
+            return
+            
+        import re
+        if re.search(r'[^\w\s\u4e00-\u9fa5]', custom_id):
+            emit('custom_id_updated', {
+                'success': False,
+                'message': '自定义ID只能包含中文、英文、数字和下划线'
+            }, room=request.sid)
+            return
+            
+        if request.sid in online_users:
+            old_id = online_users[request.sid].get('custom_id', online_users[request.sid]['id'])
+            online_users[request.sid]['custom_id'] = custom_id
+            
+            print(f"用户 {online_users[request.sid]['id']} 更新自定义ID: {old_id} -> {custom_id}")
+            
+            emit('custom_id_updated', {
+                'success': True,
+                'message': f'自定义ID已更新为: {custom_id}',
+                'custom_id': custom_id
+            }, room=request.sid)
+            broadcast_user_list()
+        else:
+            emit('custom_id_updated', {
+                'success': False,
+                'message': '用户未连接'
+            }, room=request.sid)
+            
+    except Exception as e:
+        print(f"自定义ID更新错误: {e}")
+        emit('custom_id_updated', {
+            'success': False,
+            'message': '更新失败，请稍后重试'
+        }, room=request.sid)
+
+@socketio.on('update_bubble_color')
+def handle_update_bubble_color(data):
+    """更新用户气泡颜色"""
+    try:
+        bubble_color = data.get('bubble_color', '').strip()
+        if bubble_color and len(bubble_color) <= 7:
+            if request.sid in online_users:
+                online_users[request.sid]['bubble_color'] = bubble_color
+                emit('bubble_color_updated', {
+                    'success': True,
+                    'message': '气泡颜色更新成功',
+                    'bubble_color': bubble_color
+                }, room=request.sid)
+                broadcast_user_list()
+            else:
+                emit('bubble_color_updated', {
+                    'success': False,
+                    'message': '用户未连接'
+                }, room=request.sid)
+        else:
+            emit('bubble_color_updated', {
+                'success': False,
+                'message': '颜色格式无效'
+            }, room=request.sid)
+    except Exception as e:
+        print(f"气泡颜色更新错误: {e}")
+        emit('bubble_color_updated', {
+            'success': False,
+            'message': '更新失败，请稍后重试'
+        }, room=request.sid)
 
 def broadcast_user_list():
     """广播更新后的用户列表"""
@@ -115,7 +218,8 @@ def msg_processor():
 
         if cmd_start_time is not None and (time.time() - cmd_start_time > 180):
             with queue_lock:
-                cnm.msg_stack.append("警告：命令执行超时")
+                #cnm.msg_stack.append("警告：命令执行超时")
+                print('警告：命令执行超时')
             cmd_start_time = None
 
         time.sleep(0.5)

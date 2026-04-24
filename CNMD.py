@@ -1,7 +1,8 @@
-from tools import fileedit,runcmd
+from tools import fileedit,runcmd,webgrab
 from prompt_loader import prompt0
 import bot,node
 import copy,json,time,threading
+enable_log = True
 class CNMD():
     def __init__(self,prompt = prompt0):
         with open('config.json',encoding='utf-8') as f:
@@ -69,7 +70,10 @@ class CNMD():
                 self.msg_stack.append('[D] node not found')
                 return
             elif cmd[1] == 'list':
-                self.msg_stack.append('[D] node list:\n' + '\n'.join([i.id for i in self.nodelist]))
+                temp = f'[D] node list:\n'
+                for i in self.nodelist:
+                    temp += f'{i.id} {i.message}\n'
+                self.msg_stack.append(temp.strip())
                 return
             elif cmd[1] == 'backward':
                 if len(self.msg) == 1:
@@ -202,8 +206,9 @@ class CNMD():
                 self.msg.append(self.tic)
                 self.tic += 1
                 sys_cmd = content.split('$$$')[1]
-                with open(f'./logs/{self.TIME_STAMP}.json','w',encoding='utf-8') as f:
-                    json.dump(self.messages,f,indent=4,ensure_ascii=False)
+                if enable_log:
+                    with open(f'./logs/{self.TIME_STAMP}.json','w',encoding='utf-8') as f:
+                        json.dump(self.messages,f,indent=4,ensure_ascii=False)
                 try:
                     if cmd_check == sys_cmd:
                         if self.stage_break:
@@ -240,6 +245,18 @@ class CNMD():
                             path = sys_cmd[1]
                             cmd = fileedit.encode_image(path)
                             self.msg_stack.append(f'[D] command [imread] [{path}] excuted')
+                        elif sys_cmd[0] == 'web':
+                            if sys_cmd[1] == 'grab':
+                                cmd = webgrab.get_html(sys_cmd[2])
+                                self.msg_stack.append(f'[D] command [webgrab] [{sys_cmd[2]}] excuted')
+                            if sys_cmd[1] == 'setheader':
+                                header = json.loads(sys_cmd[2])
+                                webgrab.headers = header
+                                cmd = f'web header set {header}'
+                                self.msg_stack.append(f'[D] command [webgetheader] [{header}] excuted')
+                            if sys_cmd[1] == 'ping':
+                                cmd = webgrab.ping(sys_cmd[2])
+                                self.msg_stack.append(f'[D] command [ping] [{sys_cmd[2]}] excuted')
                         elif sys_cmd[0] == 'cmd':
                             if sys_cmd[1] == '-i':
                                 runcmd.cmd_output=''

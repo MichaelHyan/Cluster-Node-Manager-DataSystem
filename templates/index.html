@@ -16,6 +16,18 @@
             --dark-text: #333;
             --light-text: #666;
             --border-color: #e0e0e0;
+            --chat-area-size: 60%;
+            --sidebar-size: 30%;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 6px 20px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.15);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 15px;
+            --radius-xl: 20px;
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
         }
 
         * {
@@ -36,50 +48,130 @@
             max-width: 1200px;
             margin: 0 auto;
             background: var(--light-bg);
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border-radius: var(--radius-xl);
+            padding: 30px;
+            box-shadow: var(--shadow-lg);
             color: var(--dark-text);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: containerFadeIn 0.6s ease-out;
+        }
+
+        @keyframes containerFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .header {
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.1);
         }
 
         .header h1 {
             color: var(--primary-color);
             margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .connection-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
+            background: linear-gradient(135deg, rgba(248, 249, 250, 0.9), rgba(240, 242, 245, 0.9));
+            padding: 25px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 30px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            backdrop-filter: blur(5px);
+            box-shadow: var(--shadow-sm);
         }
 
         .connection-info {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
         }
 
         .info-item {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid var(--primary-color);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85));
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            border-left: 6px solid var(--primary-color);
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-item.id-display {
+            border-left-color: var(--success-color);
+            background: linear-gradient(135deg, rgba(232, 245, 233, 0.95), rgba(200, 230, 201, 0.85));
+        }
+
+        .info-item.id-display.connected {
+            border-left-color: var(--success-color);
+            animation: idConnectedPulse 2s infinite;
+        }
+
+        .info-item.id-display.disconnected {
+            border-left-color: var(--danger-color);
+            background: linear-gradient(135deg, rgba(255, 235, 238, 0.95), rgba(255, 205, 210, 0.85));
+        }
+
+        @keyframes idConnectedPulse {
+            0%, 100% {
+                box-shadow: 0 6px 20px rgba(76, 175, 80, 0.2);
+            }
+            50% {
+                box-shadow: 0 6px 30px rgba(76, 175, 80, 0.4);
+            }
+        }
+
+        .info-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.05), transparent);
+            transition: left 0.6s;
+        }
+
+        .info-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        .info-item:hover::before {
+            left: 100%;
         }
 
         .info-item strong {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
             color: var(--primary-color);
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+        }
+
+        .info-item span {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: var(--dark-text);
         }
 
         .connection-controls {
@@ -92,26 +184,127 @@
         .connection-controls input {
             flex: 1;
             min-width: 200px;
-            padding: 12px 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 14px;
+            padding: 15px 20px;
+            border: 2px solid rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            font-size: 16px;
             outline: none;
-            transition: border-color 0.3s;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
         }
 
         .connection-controls input:focus {
             border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
         }
 
         .connection-controls button {
-            padding: 12px 20px;
+            padding: 15px 25px;
             border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .connection-controls button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .connection-controls button:hover::before {
+            left: 100%;
+        }
+
+        .customization-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .customization-controls input[type="text"] {
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        .customization-controls input[type="color"] {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--border-color);
             border-radius: 8px;
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
+        }
+
+        .customization-controls button {
+            padding: 10px 15px;
+            font-size: 12px;
+        }
+
+        .layout-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            margin-top: 10px;
+        }
+
+        .layout-slider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             font-size: 14px;
+        }
+
+        .layout-slider label {
+            min-width: 80px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .layout-slider input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(102, 126, 234, 0.2);
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .layout-slider input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .layout-slider span {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--primary-color);
         }
 
         .btn-connect {
@@ -142,44 +335,126 @@
 
         .chat-section {
             display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 20px;
+            grid-template-columns: var(--chat-area-size) var(--sidebar-size);
+            gap: 30px;
+            transition: grid-template-columns 0.3s ease;
         }
 
         .messages-area {
-            background: white;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 20px;
-            max-height: 500px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(102, 126, 234, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            max-height: 600px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
+            backdrop-filter: blur(5px);
+        }
+
+        .search-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 10px;
+        }
+
+        .search-area input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-area input:focus {
+            border-color: var(--primary-color);
+        }
+
+        .search-area button {
+            padding: 10px 20px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .search-area button:hover {
+            background: #5a6fd8;
         }
 
         .messages-container {
             flex: 1;
             overflow-y: auto;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            padding-right: 10px;
+        }
+
+        .messages-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages-container::-webkit-scrollbar-track {
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 3px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.3);
+            border-radius: 3px;
+        }
+
+        .messages-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.5);
         }
 
         .message {
-            margin-bottom: 15px;
-            padding: 12px 15px;
-            border-radius: 12px;
-            max-width: 80%;
+            margin-bottom: 20px;
+            padding: 15px 20px;
+            border-radius: 18px;
+            max-width: 75%;
             word-wrap: break-word;
-            animation: fadeIn 0.3s ease-in;
+            animation: fadeIn 0.4s ease-out;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .message:hover {
+            transform: translateX(2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .message::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .message:hover::before {
+            left: 100%;
         }
 
         .message.local {
-            background: #e3f2fd;
+            background: var(--local-bubble-color, #e3f2fd);
             margin-left: auto;
             border-bottom-right-radius: 4px;
         }
 
         .message.remote {
-            background: #f3e5f5;
+            background: var(--remote-bubble-color, #f3e5f5);
             margin-right: auto;
             border-bottom-left-radius: 4px;
         }
@@ -209,106 +484,200 @@
 
         .input-area {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 20px;
+            border: 2px solid rgba(102, 126, 234, 0.1);
         }
 
         .input-area input {
             flex: 1;
-            padding: 12px 15px;
-            border: 1px solid var(--border-color);
+            padding: 15px 20px;
+            border: 2px solid rgba(102, 126, 234, 0.1);
             border-radius: 25px;
-            font-size: 14px;
+            font-size: 16px;
             outline: none;
-            transition: border-color 0.3s;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.8);
         }
 
         .input-area input:focus {
             border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
         }
 
         .input-area button {
-            padding: 12px 24px;
-            background: var(--primary-color);
+            padding: 15px 30px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             color: white;
             border: none;
             border-radius: 25px;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
         .input-area button:hover {
-            background: #5a6fd8;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .input-area button:active {
+            transform: translateY(0);
         }
 
         .input-area button:disabled {
             background: #ccc;
             cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         .sidebar {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 20px;
+            background: linear-gradient(135deg, rgba(248, 249, 250, 0.9), rgba(240, 242, 245, 0.9));
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid rgba(102, 126, 234, 0.1);
+            backdrop-filter: blur(5px);
         }
 
         .connected-peers {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .connected-peers h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            font-weight: 600;
         }
 
         .peer-item {
-            background: white;
-            padding: 10px 15px;
-            margin: 8px 0;
-            border-radius: 6px;
-            border-left: 4px solid var(--success-color);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 18px;
+            margin: 10px 0;
+            border-radius: 10px;
+            border-left: 6px solid var(--success-color);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            transition: transform 0.2s ease;
+        }
+
+        .peer-item:hover {
+            transform: translateX(3px);
         }
 
         .instructions {
-            background: #fff3e0;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 0.9em;
-            line-height: 1.5;
+            background: linear-gradient(135deg, rgba(255, 243, 224, 0.9), rgba(255, 236, 204, 0.9));
+            padding: 20px;
+            border-radius: 12px;
+            font-size: 0.95em;
+            line-height: 1.6;
+            border: 1px solid rgba(255, 152, 0, 0.1);
         }
 
         .instructions h4 {
             color: var(--warning-color);
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            font-weight: 600;
         }
 
         .instructions ol {
             padding-left: 20px;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .instructions li {
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            padding-left: 5px;
         }
 
         .status {
             text-align: center;
-            padding: 10px;
-            border-radius: 6px;
+            padding: 12px 20px;
+            border-radius: 12px;
             margin: 10px 0;
-            font-weight: bold;
-            font-size: 0.9em;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .status.connected {
-            background: #e8f5e8;
+            background: linear-gradient(135deg, #e8f5e8, #d4edda);
             color: #2e7d32;
+            border: 2px solid #c3e6cb;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.25);
+        }
+
+        .status.connected::before {
+            content: '●';
+            color: #4caf50;
+            font-size: 1.2em;
+            animation: pulse 1.5s infinite;
         }
 
         .status.disconnected {
-            background: #ffebee;
+            background: linear-gradient(135deg, #ffebee, #f8d7da);
             color: #c62828;
+            border: 2px solid #f5c6cb;
+            box-shadow: 0 4px 15px rgba(244, 67, 54, 0.25);
+        }
+
+        .status.disconnected::before {
+            content: '●';
+            color: #f44336;
+            font-size: 1.2em;
+        }
+
+        .status-indicator {
+            font-size: 1.2em;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status.connected .status-indicator {
+            color: #4caf50;
+        }
+
+        .status.disconnected .status-indicator {
+            color: #f44336;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { 
+                opacity: 0; 
+                transform: translateY(15px) scale(0.95); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
         }
 
         /* 移动端适配 */
@@ -338,6 +707,30 @@
 
             .connection-controls input {
                 min-width: 100%;
+            }
+
+            .customization-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .customization-controls input[type="text"] {
+                min-width: 100%;
+            }
+
+            .layout-controls {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .layout-slider {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+
+            .layout-slider label {
+                min-width: auto;
             }
 
             .messages-area {
@@ -387,12 +780,10 @@
 
         <div class="connection-section">
             <div class="connection-info">
-                <!--
-                <div class="info-item">
+                <div class="info-item id-display disconnected" id="idDisplayItem">
                     <strong>您的ID</strong>
                     <span id="clientId">未连接</span>
                 </div>
-                -->
                 <div class="info-item">
                     <strong>连接状态</strong>
                     <div id="connectionStatus" class="status disconnected">未连接</div>
@@ -400,12 +791,35 @@
             </div>
 
             <div class="connection-controls">
-                <button class="btn-clear" onclick="clearMessages()">清空消息</button>
+                <div class="customization-controls">
+                    <input type="text" id="customIdInput" placeholder="自定义ID (最多20字符)" maxlength="20">
+                    <button class="btn-copy" onclick="updateCustomId()">更新ID</button>
+                    <input type="color" id="bubbleColorPicker" value="#e3f2fd">
+                    <button class="btn-copy" onclick="updateBubbleColor()">更新颜色</button>
+                    <button class="btn-clear" onclick="clearMessages()">清空消息</button>
+                </div>
+                <div class="layout-controls">
+                    <div class="layout-slider">
+                        <label>聊天区大小:</label>
+                        <input type="range" id="chatSizeSlider" min="40" max="80" value="60" onchange="updateLayout()">
+                        <span id="chatSizeValue">60%</span>
+                    </div>
+                    <div class="layout-slider">
+                        <label>侧边栏大小:</label>
+                        <input type="range" id="sidebarSizeSlider" min="20" max="40" value="30" onchange="updateLayout()">
+                        <span id="sidebarSizeValue">30%</span>
+                    </div>
+                    <button class="btn-copy" onclick="resetLayout()">重置布局</button>
+                </div>
             </div>
         </div>
 
         <div class="chat-section">
             <div class="messages-area">
+                <div class="search-area">
+                    <input type="text" id="searchInput" placeholder="搜索消息..." onkeyup="searchMessages()">
+                    <button onclick="searchMessages()">搜索</button>
+                </div>
                 <div class="messages-container" id="messagesContainer"></div>
                 <div class="input-area">
                     <input type="text" id="messageInput" placeholder="输入消息..." onkeypress="handleKeyPress(event)">
@@ -433,96 +847,217 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script>
-        let socket = null;
-        let myClientId = null;
-        let isConnected = false;
+        const AppState = {
+            socket: null,
+            myClientId: null,
+            myCustomId: null,
+            myBubbleColor: '#e3f2fd',
+            isConnected: false,
+            reconnectTimer: null
+        };
+
+        const DOM = {
+            clientId: document.getElementById('clientId'),
+            idDisplayItem: document.getElementById('idDisplayItem'),
+            connectionStatus: document.getElementById('connectionStatus'),
+            messagesContainer: document.getElementById('messagesContainer'),
+            messageInput: document.getElementById('messageInput'),
+            sendBtn: document.getElementById('sendBtn'),
+            usersList: document.getElementById('usersList'),
+            customIdInput: document.getElementById('customIdInput'),
+            bubbleColorPicker: document.getElementById('bubbleColorPicker'),
+            chatSizeSlider: document.getElementById('chatSizeSlider'),
+            sidebarSizeSlider: document.getElementById('sidebarSizeSlider'),
+            chatSizeValue: document.getElementById('chatSizeValue'),
+            sidebarSizeValue: document.getElementById('sidebarSizeValue'),
+            searchInput: document.getElementById('searchInput')
+        };
+
+        function updateClientIdDisplay(id) {
+            if (DOM.clientId && id) {
+                DOM.clientId.textContent = id;
+                DOM.clientId.style.color = '#2e7d32';
+                DOM.clientId.style.fontWeight = '700';
+                DOM.clientId.style.fontSize = '1.2em';
+                
+                if (DOM.idDisplayItem) {
+                    DOM.idDisplayItem.classList.remove('disconnected');
+                    DOM.idDisplayItem.classList.add('connected');
+                }
+                
+                console.log('ID显示已更新为:', id);
+                return true;
+            }
+            console.error('无法更新ID显示');
+            return false;
+        }
 
         function connect() {
-            socket = io();
+            try {
+                if (AppState.socket) {
+                    AppState.socket.removeAllListeners();
+                    AppState.socket = null;
+                }
 
-            socket.on('connect', function() {
-                isConnected = true;
-                updateConnectionStatus(true);
-                console.log('已连接到服务器');
-            });
+                AppState.socket = io({
+                    reconnection: false,
+                    timeout: 20000,
+                    transports: ['websocket', 'polling'],
+                    forceNew: true
+                });
 
-            socket.on('connected', function(data) {
-                myClientId = data.client_id;
-                document.getElementById('clientId').textContent = myClientId;
-                addSystemMessage(data.message);
-            });
+                AppState.socket.on('connect', function() {
+                    console.log('WebSocket连接成功');
+                    AppState.isConnected = true;
+                    updateConnectionStatus(true);
+                    addSystemMessage('连接成功！欢迎使用CNMD通讯系统');
+                    
+                    if (AppState.reconnectTimer) {
+                        clearTimeout(AppState.reconnectTimer);
+                        AppState.reconnectTimer = null;
+                    }
+                });
 
-            socket.on('user_joined', function(data) {
-                addSystemMessage(data.message);
-                updateUsersList();
-            });
+                AppState.socket.on('connected', function(data) {
+                    console.log('收到connected事件，数据:', data);
+                    
+                    AppState.myClientId = data.client_id || 'unknown';
+                    AppState.myCustomId = data.custom_id || AppState.myClientId;
+                    
+                    updateClientIdDisplay(AppState.myCustomId);
+                    
+                    addSystemMessage(data.message || '连接成功');
+                });
 
-            socket.on('user_left', function(data) {
-                addSystemMessage(data.message);
-                updateUsersList();
-            });
+                AppState.socket.on('user_joined', function(data) {
+                    addSystemMessage(data.message);
+                    updateUsersList();
+                });
 
-            socket.on('new_message', function(data) {
-                addMessage(data);
-            });
+                AppState.socket.on('user_left', function(data) {
+                    addSystemMessage(data.message);
+                    updateUsersList();
+                });
 
-            socket.on('users_list', function(data) {
-                displayUsers(data.users);
-            });
+                AppState.socket.on('new_message', function(data) {
+                    addMessage(data);
+                });
 
-            socket.on('disconnect', function() {
-                isConnected = false;
-                updateConnectionStatus(false);
-                addSystemMessage('已断开连接');
-            });
+                AppState.socket.on('users_list', function(data) {
+                    displayUsers(data.users);
+                });
+
+                AppState.socket.on('custom_id_updated', function(data) {
+                    console.log('收到custom_id_updated事件，数据:', data);
+                    if (data.success) {
+                        AppState.myCustomId = data.custom_id;
+                        updateClientIdDisplay(AppState.myCustomId);
+                        addSystemMessage(data.message || '自定义ID更新成功');
+                        showNotification('自定义ID更新成功', 'success');
+                    } else {
+                        addSystemMessage(data.message || '自定义ID更新失败');
+                        showNotification(data.message || '更新失败', 'error');
+                    }
+                });
+
+                AppState.socket.on('bubble_color_updated', function(data) {
+                    if (data.success) {
+                        AppState.myBubbleColor = data.bubble_color;
+                        document.documentElement.style.setProperty('--local-bubble-color', AppState.myBubbleColor);
+                        addSystemMessage(data.message);
+                        showNotification('气泡颜色更新成功', 'success');
+                    } else {
+                        addSystemMessage(data.message);
+                        showNotification(data.message, 'error');
+                    }
+                });
+
+                AppState.socket.on('disconnect', function() {
+                    AppState.isConnected = false;
+                    updateConnectionStatus(false);
+                    addSystemMessage('已断开连接');
+                    showNotification('连接已断开', 'warning');
+                });
+
+                AppState.socket.on('connect_error', function(error) {
+                    console.error('连接错误:', error);
+                    AppState.isConnected = false;
+                    updateConnectionStatus(false);
+                    addSystemMessage('连接失败，正在重试...');
+                    showNotification('连接失败，正在重试...', 'error');
+                    
+                    if (AppState.reconnectTimer) {
+                        clearTimeout(AppState.reconnectTimer);
+                    }
+                    
+                    AppState.reconnectTimer = setTimeout(() => {
+                        console.log('尝试重新连接...');
+                        connect();
+                    }, 3000);
+                });
+
+                AppState.socket.on('error', function(error) {
+                    console.error('Socket错误:', error);
+                    addSystemMessage('发生错误: ' + (error.message || '未知错误'));
+                });
+
+            } catch (error) {
+                console.error('连接初始化错误:', error);
+                addSystemMessage('初始化连接失败');
+                showNotification('初始化连接失败', 'error');
+            }
         }
 
         function disconnect() {
-            if (socket && isConnected) {
-                socket.disconnect();
+            if (AppState.socket && AppState.isConnected) {
+                AppState.socket.disconnect();
                 addSystemMessage('已断开连接');
             }
         }
 
         function sendMessage() {
-            if (!socket || !isConnected) {
+            if (!AppState.socket || !AppState.isConnected) {
                 return;
             }
 
-            const messageInput = document.getElementById('messageInput');
-            const message = messageInput.value.trim();
+            const message = DOM.messageInput.value.trim();
 
             if (!message) {
                 return;
             }
 
-            socket.emit('send_message', {
+            AppState.socket.emit('send_message', {
                 message: message
             });
 
-            messageInput.value = '';
+            DOM.messageInput.value = '';
         }
 
         function addMessage(data) {
-            const container = document.getElementById('messagesContainer');
+            const container = DOM.messagesContainer;
             const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${data.user_id === myClientId ? 'local' : 'remote'}`;
-
-            const time = new Date(data.timestamp).toLocaleTimeString();
+            const isLocal = data.user_id === AppState.myClientId;
+            messageDiv.className = `message ${isLocal ? 'local' : 'remote'}`;
+            
+            if (!isLocal && data.bubble_color) {
+                messageDiv.style.background = data.bubble_color;
+            }
+            const displayName = data.custom_id || `用户 ${data.user_id}`;
+            const time = formatTime(data.timestamp);
             messageDiv.innerHTML = `
                 <div class="message-info">
-                    <span>用户 ${data.user_id}</span>
+                    <span>${displayName}${isLocal ? ' (你)' : ''}</span>
                     <span>${time}</span>
                 </div>
                 <div class="message-content">${escapeHtml(data.content)}</div>
             `;
 
             container.appendChild(messageDiv);
-            container.scrollTop = container.scrollHeight;
+            autoScrollToBottom();
         }
 
         function addSystemMessage(text) {
-            const container = document.getElementById('messagesContainer');
+            const container = DOM.messagesContainer;
             const messageDiv = document.createElement('div');
             messageDiv.className = 'message system';
             messageDiv.textContent = text;
@@ -531,49 +1066,150 @@
         }
 
         function displayUsers(users) {
-            const usersList = document.getElementById('usersList');
-            usersList.innerHTML = '';
+            DOM.usersList.innerHTML = '';
 
             users.forEach(user => {
                 const userDiv = document.createElement('div');
                 userDiv.className = 'peer-item';
-                userDiv.textContent = `用户 ${user.id} ${user.id === myClientId ? '(你)' : ''}`;
-                usersList.appendChild(userDiv);
+                userDiv.textContent = `用户 ${user.id} ${user.id === AppState.myClientId ? '(你)' : ''}`;
+                DOM.usersList.appendChild(userDiv);
             });
         }
 
         function updateUsersList() {
-            if (socket && isConnected) {
-                socket.emit('get_users');
+            if (AppState.socket && AppState.isConnected) {
+                AppState.socket.emit('get_users');
             }
         }
 
         function updateConnectionStatus(connected) {
-            const statusDiv = document.getElementById('connectionStatus');
-            const disconnectBtn = document.querySelector('.btn-disconnect');
+            if (DOM.connectionStatus) {
+                if (connected) {
+                    DOM.connectionStatus.className = 'status connected';
+                    DOM.connectionStatus.innerHTML = '<span class="status-indicator">●</span>已连接';
+                } else {
+                    DOM.connectionStatus.className = 'status disconnected';
+                    DOM.connectionStatus.innerHTML = '<span class="status-indicator">●</span>未连接';
+                }
+            }
             
-            if (connected) {
-                statusDiv.className = 'status connected';
-                statusDiv.textContent = '已连接';
-                disconnectBtn.disabled = false;
-            } else {
-                statusDiv.className = 'status disconnected';
-                statusDiv.textContent = '未连接';
-                disconnectBtn.disabled = true;
+            const disconnectBtn = document.querySelector('.btn-disconnect');
+            if (disconnectBtn) {
+                disconnectBtn.disabled = !connected;
+                disconnectBtn.style.opacity = connected ? '1' : '0.6';
+            }
+            
+            if (DOM.idDisplayItem) {
+                if (connected) {
+                    DOM.idDisplayItem.classList.remove('disconnected');
+                    if (AppState.myCustomId) {
+                        DOM.idDisplayItem.classList.add('connected');
+                    }
+                } else {
+                    DOM.idDisplayItem.classList.remove('connected');
+                    DOM.idDisplayItem.classList.add('disconnected');
+                }
+            }
+            
+            if (DOM.clientId) {
+                if (!connected) {
+                    DOM.clientId.textContent = '未连接';
+                    DOM.clientId.style.color = '#f44336';
+                    DOM.clientId.style.fontWeight = '600';
+                    DOM.clientId.style.fontSize = '1.1em';
+                }
             }
         }
 
         function enableChatControls(enabled) {
-            const messageInput = document.getElementById('messageInput');
-            const sendBtn = document.getElementById('sendBtn');
+            if (DOM.messageInput) DOM.messageInput.disabled = !enabled;
+            if (DOM.sendBtn) DOM.sendBtn.disabled = !enabled;
+        }
+
+        function updateCustomId() {
+            if (!DOM.customIdInput) return;
             
-            messageInput.disabled = !enabled;
-            sendBtn.disabled = !enabled;
+            const customId = DOM.customIdInput.value.trim();
+            
+            if (!customId) {
+                showNotification('请输入自定义ID', 'warning');
+                return;
+            }
+            
+            if (customId.length > 20) {
+                showNotification('自定义ID长度不能超过20个字符', 'warning');
+                return;
+            }
+            
+            if (AppState.socket && AppState.isConnected) {
+                AppState.socket.emit('update_custom_id', { custom_id: customId });
+                DOM.customIdInput.value = '';
+            } else {
+                showNotification('请先连接服务器', 'error');
+            }
+        }
+
+        function updateBubbleColor() {
+            if (!DOM.bubbleColorPicker) return;
+            
+            const color = DOM.bubbleColorPicker.value;
+            
+            if (!color) {
+                showNotification('请选择颜色', 'warning');
+                return;
+            }
+            
+            if (AppState.socket && AppState.isConnected) {
+                AppState.socket.emit('update_bubble_color', { bubble_color: color });
+                AppState.myBubbleColor = color;
+                document.documentElement.style.setProperty('--local-bubble-color', color);
+            } else {
+                showNotification('请先连接服务器', 'error');
+            }
         }
 
         function clearMessages() {
-            const container = document.getElementById('messagesContainer');
-            container.innerHTML = '';
+            if (DOM.messagesContainer) {
+                DOM.messagesContainer.innerHTML = '';
+            }
+            showNotification('消息已清空', 'success');
+        }
+
+        function searchMessages() {
+            if (!DOM.searchInput) return;
+            
+            const searchTerm = DOM.searchInput.value.toLowerCase().trim();
+            const messages = document.querySelectorAll('.message');
+            
+            if (!searchTerm) {
+                messages.forEach(msg => msg.style.display = 'block');
+                return;
+            }
+            
+            let foundCount = 0;
+            messages.forEach(msg => {
+                const content = msg.querySelector('.message-content');
+                const sender = msg.querySelector('.message-info span:first-child');
+                
+                if (content && sender) {
+                    const contentText = content.textContent.toLowerCase();
+                    const senderText = sender.textContent.toLowerCase();
+                    
+                    if (contentText.includes(searchTerm) || senderText.includes(searchTerm)) {
+                        msg.style.display = 'block';
+                        msg.style.animation = 'pulse 0.5s ease';
+                        foundCount++;
+                    } else {
+                        msg.style.display = 'none';
+                    }
+                }
+            });
+            
+            if (foundCount > 0) {
+                showNotification(`找到 ${foundCount} 条相关消息`, 'success');
+            } else {
+                showNotification('未找到相关消息', 'warning');
+            }
         }
 
         function handleKeyPress(event) {
@@ -588,8 +1224,131 @@
             return div.innerHTML;
         }
 
-        // 页面加载时自动连接
+        function updateLayout() {
+            if (!DOM.chatSizeSlider || !DOM.sidebarSizeSlider) return;
+            
+            const chatSize = DOM.chatSizeSlider.value;
+            const sidebarSize = DOM.sidebarSizeSlider.value;
+            
+            document.documentElement.style.setProperty('--chat-area-size', chatSize + '%');
+            document.documentElement.style.setProperty('--sidebar-size', sidebarSize + '%');
+            
+            if (DOM.chatSizeValue) DOM.chatSizeValue.textContent = chatSize + '%';
+            if (DOM.sidebarSizeValue) DOM.sidebarSizeValue.textContent = sidebarSize + '%';
+            
+            localStorage.setItem('chatLayout', JSON.stringify({
+                chatSize: chatSize,
+                sidebarSize: sidebarSize
+            }));
+        }
+
+        function resetLayout() {
+            if (DOM.chatSizeSlider) DOM.chatSizeSlider.value = 60;
+            if (DOM.sidebarSizeSlider) DOM.sidebarSizeSlider.value = 30;
+            updateLayout();
+            showNotification('布局已重置', 'success');
+        }
+
+        function loadSavedLayout() {
+            const savedLayout = localStorage.getItem('chatLayout');
+            if (savedLayout) {
+                try {
+                    const layout = JSON.parse(savedLayout);
+                    if (DOM.chatSizeSlider) DOM.chatSizeSlider.value = layout.chatSize || 60;
+                    if (DOM.sidebarSizeSlider) DOM.sidebarSizeSlider.value = layout.sidebarSize || 30;
+                    updateLayout();
+                } catch (e) {
+                    console.error('加载布局设置失败:', e);
+                }
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <span>${message}</span>
+                <button onclick="this.parentElement.remove()">×</button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateY(-20px)';
+                    setTimeout(() => {
+                        if (notification.parentElement) {
+                            notification.remove();
+                        }
+                    }, 300);
+                }
+            }, 4000);
+        }
+
+        function formatTime(date) {
+            const now = new Date();
+            const messageDate = new Date(date);
+            
+            if (now.toDateString() === messageDate.toDateString()) {
+                return messageDate.toLocaleTimeString('zh-CN', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            } else {
+                return messageDate.toLocaleDateString('zh-CN', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                }) + ' ' + messageDate.toLocaleTimeString('zh-CN', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+            }
+        }
+
+        function autoScrollToBottom() {
+            const container = document.getElementById('messagesContainer');
+            container.scrollTop = container.scrollHeight;
+        }
+
         window.onload = function() {
+            const style = document.createElement('style');
+            style.textContent = `
+                .notification {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 15px 20px;
+                    border-radius: 10px;
+                    color: white;
+                    font-weight: 600;
+                    z-index: 1000;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    transition: all 0.3s ease;
+                    max-width: 300px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                }
+                .notification-success { background: linear-gradient(135deg, #4caf50, #45a049); }
+                .notification-error { background: linear-gradient(135deg, #f44336, #e53935); }
+                .notification-warning { background: linear-gradient(135deg, #ff9800, #f57c00); }
+                .notification-info { background: linear-gradient(135deg, #2196f3, #1976d2); }
+                .notification button {
+                    background: none;
+                    border: none;
+                    color: white;
+                    font-size: 18px;
+                    cursor: pointer;
+                    padding: 0;
+                    width: 20px;
+                    height: 20px;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            loadSavedLayout();
+            
             connect();
         };
     </script>
