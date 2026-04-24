@@ -482,14 +482,37 @@
             word-wrap: break-word;
         }
 
+        .mention-highlight {
+            color: var(--primary-color);
+            font-weight: 600;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 1px 4px;
+            border-radius: 4px;
+        }
+
+        .message.is-mentioned {
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
+            animation: mentionPulse 2s ease-in-out 3;
+        }
+
+        @keyframes mentionPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(102, 126, 234, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(102, 126, 234, 0.6); }
+        }
+
         .input-area {
-            display: flex;
-            gap: 15px;
-            align-items: center;
+            position: relative;
             background: rgba(255, 255, 255, 0.9);
             padding: 15px;
             border-radius: 20px;
             border: 2px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 15px;
+            align-items: center;
         }
 
         .input-area input {
@@ -507,6 +530,115 @@
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
             background: white;
+        }
+
+        .mention-popup {
+            position: absolute;
+            bottom: 100%;
+            left: 15px;
+            right: 15px;
+            background: white;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            overflow: hidden;
+            z-index: 100;
+            animation: popupSlideUp 0.2s ease-out;
+            max-height: 200px;
+        }
+
+        @keyframes popupSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .mention-popup-header {
+            padding: 10px 15px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .mention-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .mention-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: background var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .mention-item:last-child {
+            border-bottom: none;
+        }
+
+        .mention-item:hover, .mention-item.selected {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .mention-item .mention-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .mention-item .mention-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .mention-item .mention-name {
+            font-weight: 600;
+            font-size: 0.95em;
+            color: var(--dark-text);
+        }
+
+        .mention-item .mention-id {
+            font-size: 0.8em;
+            color: var(--light-text);
+        }
+
+        .mention-item .mention-me-tag {
+            font-size: 0.7em;
+            color: var(--info-color);
+            background: rgba(33, 150, 243, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .mention-item .mention-bot-tag {
+            font-size: 0.7em;
+            color: var(--success-color);
+            background: rgba(76, 175, 80, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
+        }
+
+        .mention-item .mention-bot-avatar {
+            font-size: 18px;
+            background: linear-gradient(135deg, #4caf50, #45a049);
         }
 
         .input-area button {
@@ -551,11 +683,43 @@
             margin-bottom: 25px;
         }
 
-        .connected-peers h3 {
-            color: var(--primary-color);
+        .peers-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 15px;
+        }
+
+        .peers-header h3 {
+            color: var(--primary-color);
+            margin-bottom: 0;
             font-size: 1.3em;
             font-weight: 600;
+        }
+
+        .btn-toggle-id {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-toggle-id:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-toggle-id.active {
+            background: linear-gradient(135deg, var(--success-color), #45a049);
         }
 
         .peer-item {
@@ -564,12 +728,28 @@
             margin: 10px 0;
             border-radius: 10px;
             border-left: 6px solid var(--success-color);
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-            transition: transform 0.2s ease;
+            box-shadow: var(--shadow-sm);
+            transition: transform var(--transition-fast);
+            cursor: pointer;
+            position: relative;
         }
 
         .peer-item:hover {
             transform: translateX(3px);
+        }
+
+        .peer-item.is-me {
+            border-left-color: var(--info-color);
+            background: linear-gradient(135deg, rgba(227, 242, 253, 0.95), rgba(187, 222, 251, 0.85));
+        }
+
+        .peer-item .user-tag {
+            font-size: 0.75em;
+            color: var(--info-color);
+            background: rgba(33, 150, 243, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 5px;
         }
 
         .instructions {
@@ -822,14 +1002,25 @@
                 </div>
                 <div class="messages-container" id="messagesContainer"></div>
                 <div class="input-area">
-                    <input type="text" id="messageInput" placeholder="输入消息..." onkeypress="handleKeyPress(event)">
-                    <button id="sendBtn" onclick="sendMessage()">发送</button>
+                    <div class="input-wrapper">
+                        <input type="text" id="messageInput" placeholder="输入消息..." onkeypress="handleKeyPress(event)" oninput="handleMessageInput(event)" onkeydown="handleInputKeydown(event)">
+                        <button id="sendBtn" onclick="sendMessage()">发送</button>
+                    </div>
+                    <div id="mentionPopup" class="mention-popup" style="display: none;">
+                        <div class="mention-popup-header">选择要@的用户</div>
+                        <div id="mentionList" class="mention-list"></div>
+                    </div>
                 </div>
             </div>
 
             <div class="sidebar">
                 <div class="connected-peers">
-                    <h3>在线用户</h3>
+                    <div class="peers-header">
+                        <h3>在线用户</h3>
+                        <button class="btn-toggle-id" onclick="toggleUserIdDisplay()" title="切换显示自定义ID">
+                            <span id="toggleIdIcon">👤</span>
+                        </button>
+                    </div>
                     <div id="usersList"></div>
                 </div>
                 <div class="instructions">
@@ -853,7 +1044,12 @@
             myCustomId: null,
             myBubbleColor: '#e3f2fd',
             isConnected: false,
-            reconnectTimer: null
+            reconnectTimer: null,
+            showCustomIdInList: false,
+            onlineUsers: [],
+            mentionPopupVisible: false,
+            mentionFilterText: '',
+            currentAtPos: -1
         };
 
         const DOM = {
@@ -1044,13 +1240,42 @@
             }
             const displayName = data.custom_id || `用户 ${data.user_id}`;
             const time = formatTime(data.timestamp);
+            
+            let content = escapeHtml(data.content);
+            content = content.replace(/@(\S+)/g, '<span class="mention-highlight">@$1</span>');
+            
             messageDiv.innerHTML = `
                 <div class="message-info">
                     <span>${displayName}${isLocal ? ' (你)' : ''}</span>
                     <span>${time}</span>
                 </div>
-                <div class="message-content">${escapeHtml(data.content)}</div>
+                <div class="message-content">${content}</div>
             `;
+
+            if (data.mentions && !isLocal) {
+                const myCustomId = AppState.myCustomId || AppState.myClientId;
+                const myId = AppState.myClientId;
+                let isMentioned = false;
+                
+                data.mentions.forEach(mention => {
+                    if (mention.toLowerCase() === myCustomId.toLowerCase() || 
+                        mention.toLowerCase() === myId.toLowerCase()) {
+                        isMentioned = true;
+                    }
+                });
+                
+                if (isMentioned) {
+                    messageDiv.classList.add('is-mentioned');
+                    showNotification(`你被 ${displayName} @了`, 'info');
+                    
+                    if (document.hidden) {
+                        document.title = '【新提醒】CNMD-局域网通讯系统';
+                        setTimeout(() => {
+                            document.title = 'CNMD-局域网通讯系统';
+                        }, 3000);
+                    }
+                }
+            }
 
             container.appendChild(messageDiv);
             autoScrollToBottom();
@@ -1066,12 +1291,19 @@
         }
 
         function displayUsers(users) {
+            AppState.onlineUsers = users;
             DOM.usersList.innerHTML = '';
 
             users.forEach(user => {
                 const userDiv = document.createElement('div');
-                userDiv.className = 'peer-item';
-                userDiv.textContent = `用户 ${user.id} ${user.id === AppState.myClientId ? '(你)' : ''}`;
+                userDiv.className = 'peer-item' + (user.id === AppState.myClientId ? ' is-me' : '');
+                const isMe = user.id === AppState.myClientId;
+                const displayName = AppState.showCustomIdInList ? (user.custom_id || user.id) : user.id;
+                const suffix = isMe ? ' <span class="user-tag">我</span>' : '';
+                userDiv.innerHTML = `用户 ${escapeHtml(displayName)}${suffix}`;
+                userDiv.dataset.userId = user.id;
+                userDiv.dataset.customId = user.custom_id || user.id;
+                userDiv.onclick = () => mentionUser(user);
                 DOM.usersList.appendChild(userDiv);
             });
         }
@@ -1214,8 +1446,242 @@
 
         function handleKeyPress(event) {
             if (event.key === 'Enter') {
-                sendMessage();
+                if (AppState.mentionPopupVisible) {
+                    event.preventDefault();
+                    selectMentionUser();
+                } else {
+                    sendMessage();
+                }
             }
+        }
+
+        function handleInputKeydown(event) {
+            if (!AppState.mentionPopupVisible) return;
+            
+            const mentionList = document.getElementById('mentionList');
+            if (!mentionList) return;
+            
+            const items = mentionList.querySelectorAll('.mention-item');
+            const selectedItem = mentionList.querySelector('.mention-item.selected');
+            let selectedIndex = -1;
+            
+            items.forEach((item, index) => {
+                if (item === selectedItem) {
+                    selectedIndex = index;
+                }
+            });
+            
+            if (event.key === 'ArrowDown') {
+                event.preventDefault();
+                const nextIndex = (selectedIndex + 1) % items.length;
+                items.forEach(item => item.classList.remove('selected'));
+                items[nextIndex].classList.add('selected');
+                items[nextIndex].scrollIntoView({ block: 'nearest' });
+            } else if (event.key === 'ArrowUp') {
+                event.preventDefault();
+                const prevIndex = selectedIndex <= 0 ? items.length - 1 : selectedIndex - 1;
+                items.forEach(item => item.classList.remove('selected'));
+                items[prevIndex].classList.add('selected');
+                items[prevIndex].scrollIntoView({ block: 'nearest' });
+            } else if (event.key === 'Tab') {
+                event.preventDefault();
+                selectMentionUser();
+            } else if (event.key === 'Escape') {
+                hideMentionPopup();
+            }
+        }
+
+        function handleMessageInput(event) {
+            const value = event.target.value;
+            const cursorPos = event.target.selectionStart;
+            
+            const textBeforeCursor = value.substring(0, cursorPos);
+            const lastAtPos = textBeforeCursor.lastIndexOf('@');
+            
+            if (lastAtPos !== -1) {
+                const textAfterAt = textBeforeCursor.substring(lastAtPos + 1);
+                
+                if (!textAfterAt.includes(' ')) {
+                    AppState.mentionFilterText = textAfterAt;
+                    AppState.currentAtPos = lastAtPos;
+                    showMentionPopup(textAfterAt);
+                    return;
+                }
+            }
+            
+            hideMentionPopup();
+        }
+
+        function showMentionPopup(filterText) {
+            const popup = document.getElementById('mentionPopup');
+            const mentionList = document.getElementById('mentionList');
+            
+            if (!popup || !mentionList) return;
+            
+            const filter = filterText.toLowerCase();
+            
+            const isBotMatched = filter === '' || 'bot'.includes(filter);
+            
+            const filteredUsers = AppState.onlineUsers.filter(user => {
+                const customId = (user.custom_id || user.id).toLowerCase();
+                const userId = user.id.toLowerCase();
+                return customId.includes(filter) || userId.includes(filter);
+            });
+            
+            if (!isBotMatched && filteredUsers.length === 0) {
+                hideMentionPopup();
+                return;
+            }
+            
+            mentionList.innerHTML = '';
+            
+            if (isBotMatched) {
+                const botItem = document.createElement('div');
+                botItem.className = 'mention-item mention-bot-item' + (filter === '' ? ' selected' : '');
+                botItem.dataset.userId = 'bot';
+                botItem.innerHTML = `
+                    <div class="mention-avatar mention-bot-avatar">🤖</div>
+                    <div class="mention-info">
+                        <div class="mention-name">bot<span class="mention-bot-tag">快捷</span></div>
+                        <div class="mention-id">命令机器人</div>
+                    </div>
+                `;
+                botItem.onclick = () => selectBotMention();
+                mentionList.appendChild(botItem);
+            }
+            
+            filteredUsers.forEach((user, index) => {
+                const item = document.createElement('div');
+                const isFirstUser = !isBotMatched && index === 0;
+                item.className = 'mention-item' + (isFirstUser ? ' selected' : '');
+                item.dataset.userId = user.id;
+                const isMe = user.id === AppState.myClientId;
+                const displayName = user.custom_id || user.id;
+                
+                item.innerHTML = `
+                    <div class="mention-avatar">${displayName.charAt(0).toUpperCase()}</div>
+                    <div class="mention-info">
+                        <div class="mention-name">${escapeHtml(displayName)}${isMe ? '<span class="mention-me-tag">我</span>' : ''}</div>
+                        <div class="mention-id">ID: ${escapeHtml(user.id)}</div>
+                    </div>
+                `;
+                
+                item.onclick = () => selectMentionUser(user);
+                mentionList.appendChild(item);
+            });
+            
+            popup.style.display = 'block';
+            AppState.mentionPopupVisible = true;
+        }
+
+        function hideMentionPopup() {
+            const popup = document.getElementById('mentionPopup');
+            if (popup) {
+                popup.style.display = 'none';
+            }
+            AppState.mentionPopupVisible = false;
+            AppState.mentionFilterText = '';
+        }
+
+        function selectBotMention() {
+            const input = DOM.messageInput;
+            if (!input) return;
+            
+            const value = input.value;
+            const cursorPos = input.selectionStart;
+            const textBeforeCursor = value.substring(0, cursorPos);
+            const lastAtPos = textBeforeCursor.lastIndexOf('@');
+            
+            if (lastAtPos !== -1) {
+                const beforeAt = value.substring(0, lastAtPos);
+                const afterCursor = value.substring(cursorPos);
+                input.value = beforeAt + '@bot ' + afterCursor;
+                
+                const newPos = beforeAt.length + '@bot '.length;
+                input.focus();
+                input.setSelectionRange(newPos, newPos);
+            }
+            
+            hideMentionPopup();
+        }
+
+        function selectMentionUser(user) {
+            if (!user && AppState.mentionPopupVisible) {
+                const selectedItem = document.querySelector('.mention-item.selected');
+                if (selectedItem) {
+                    const userId = selectedItem.dataset.userId;
+                    if (userId === 'bot') {
+                        selectBotMention();
+                        return;
+                    }
+                    user = AppState.onlineUsers.find(u => u.id === userId);
+                }
+            }
+            
+            if (!user) return;
+            
+            const input = DOM.messageInput;
+            if (!input) return;
+            
+            const value = input.value;
+            const cursorPos = input.selectionStart;
+            const textBeforeCursor = value.substring(0, cursorPos);
+            const lastAtPos = textBeforeCursor.lastIndexOf('@');
+            
+            if (lastAtPos !== -1) {
+                const beforeAt = value.substring(0, lastAtPos);
+                const afterCursor = value.substring(cursorPos);
+                const displayName = user.custom_id || user.id;
+                input.value = beforeAt + '@' + displayName + ' ' + afterCursor;
+                
+                const newPos = beforeAt.length + '@'.length + displayName.length + 1;
+                input.focus();
+                input.setSelectionRange(newPos, newPos);
+            }
+            
+            hideMentionPopup();
+        }
+
+        function mentionUser(user) {
+            if (!user || !DOM.messageInput) return;
+            
+            const displayName = user.custom_id || user.id;
+            const input = DOM.messageInput;
+            const currentValue = input.value;
+            const cursorPos = input.selectionStart;
+            
+            const beforeCursor = currentValue.substring(0, cursorPos);
+            const afterCursor = currentValue.substring(cursorPos);
+            
+            input.value = beforeCursor + '@' + displayName + ' ' + afterCursor;
+            
+            const newPos = cursorPos + '@'.length + displayName.length + 1;
+            input.focus();
+            input.setSelectionRange(newPos, newPos);
+        }
+
+        function toggleUserIdDisplay() {
+            AppState.showCustomIdInList = !AppState.showCustomIdInList;
+            
+            const toggleBtn = document.querySelector('.btn-toggle-id');
+            const toggleIcon = document.getElementById('toggleIdIcon');
+            
+            if (toggleBtn) {
+                toggleBtn.classList.toggle('active', AppState.showCustomIdInList);
+            }
+            
+            if (toggleIcon) {
+                toggleIcon.textContent = AppState.showCustomIdInList ? '🏷️' : '👤';
+            }
+            
+            if (AppState.onlineUsers.length > 0) {
+                displayUsers(AppState.onlineUsers);
+            }
+            
+            showNotification(
+                AppState.showCustomIdInList ? '已切换到显示自定义ID' : '已切换到显示默认ID',
+                'info'
+            );
         }
 
         function escapeHtml(text) {

@@ -1,15 +1,15 @@
 from tools import fileedit,runcmd,webgrab
-from prompt_loader import prompt0
+from prompt_loader import prompt
 import bot,node
 import copy,json,time,threading
 enable_log = True
 class CNMD():
-    def __init__(self,prompt = prompt0):
+    def __init__(self,prompt = prompt):
         with open('config.json',encoding='utf-8') as f:
             self.config = json.load(f)
         self.TIME_STAMP = round(time.time())
         self.stage_break = self.config['break']
-        self.prompt = prompt.load()
+        self.prompt = prompt.load('Agent')
         self.msg_stack = []
         self.nodelist = []
         self.nodelist.append(node.node())
@@ -36,6 +36,7 @@ class CNMD():
 3. Agent命令
 #bot reasoning True/False - 开关返回思考内容
 #bot reset                - 清空记录
+#bot prompt               - 切换人设（测试接口）
 使用示例：
 #node save important_conversation
 #node load important_conversation
@@ -111,13 +112,13 @@ class CNMD():
                 else:
                     self.msg_stack.append('[D] command not found')
                     return
-            elif cmd[1] == 'reset':
+            elif cmd[1] == 'prompt':
+                self.prompt = prompt.load(cmd[2])
                 self.TIME_STAMP = round(time.time())
-                self.msg_stack = []
                 self.nodelist = []
                 self.nodelist.append(node.node())
-                self.nodelist[0].id = 'init'
-                self.nodelist[0].message = [0]
+                self.nodelist[-1].id = 'init'
+                self.nodelist[-1].message = [0]
                 self.messages = [
                     {
                         "role":"system",
@@ -125,6 +126,19 @@ class CNMD():
                     }
                 ]
                 self.msg = self.nodelist[0].message
+                self.tic = 1
+                self.msg_stack.append('[D] bot prompt set')
+            elif cmd[1] == 'reset':
+                self.nodelist.append(node.node())
+                self.nodelist[-1].id = 'init'
+                self.nodelist[-1].message = [0]
+                self.messages = [
+                    {
+                        "role":"system",
+                        "content":self.prompt
+                    }
+                ]
+                self.msg = self.nodelist[-1].message
                 self.tic = 1
                 self.msg_stack.append('[D] bot reset')
                 return

@@ -82,7 +82,6 @@ def handle_send_message(data):
                 processed_msg = stripped_msg            
             msg_queue.append(processed_msg)
 
-
     user = online_users.get(request.sid, {})
     message_data = {
         'id': str(uuid.uuid4())[:8],
@@ -93,6 +92,17 @@ def handle_send_message(data):
         'content': message[:1000],
         'timestamp': datetime.now().isoformat()
     }
+
+    import re
+    at_mentions = re.findall(r'@(\S+)', message)
+    if at_mentions:
+        cleaned_mentions = []
+        for mention in at_mentions:
+            cleaned = mention.rstrip('.,;:!?)）')
+            if cleaned:
+                cleaned_mentions.append(cleaned)
+        if cleaned_mentions:
+            message_data['mentions'] = cleaned_mentions
 
     emit('new_message', message_data, broadcast=True)
 
