@@ -103,11 +103,11 @@ python webui.py
 
 ```json
 {
-    "API_KEY": "your_api_key",
-    "BASE_URL": "https://api.openai.com/v1",
-    "MODEL": "gpt-3.5-turbo",
-    "base_path": "D:/git/",
-    "break": true
+    "API_KEY":"sk-9c15b4993069425axxxxd55a4d245a27",
+    "BASE_URL":"https://api.deepseek.com/v1",
+    "MODEL":"deepseek-reasoner",
+    "base_path":"D:/git/Cluster-Node-Manager-DataSystem", //工作目录
+    "break": true //重复指令禁止方式，true为直接断开任务
 }
 ```
 
