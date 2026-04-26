@@ -104,30 +104,9 @@ class CNMD():
                     self.msg_stack.append('[D] command not found')
                     return
             elif cmd[1] == 'prompt':
-                self.prompt = prompt.load(cmd[2])
-                self.TIME_STAMP = round(time.time())
-                self.nodelist = {}
-                self.nodelist['init'] = [0]
-                self.messages = [
-                    {
-                        "role":"system",
-                        "content":self.prompt
-                    }
-                ]
-                self.msg = self.nodelist['init']
-                self.tic = 1
-                self.msg_stack.append('[D] bot prompt set')
+                self.set_prompt(cmd[2])
             elif cmd[1] == 'reset':
-                self.nodelist['init'] = [0]
-                self.messages = [
-                    {
-                        "role":"system",
-                        "content":self.prompt
-                    }
-                ]
-                self.msg = self.nodelist['init']
-                self.tic = 1
-                self.msg_stack.append('[D] bot reset')
+                self.reset()
                 return
             else:
                 self.msg_stack.append('[D] command not found')
@@ -139,7 +118,34 @@ class CNMD():
         else:
             self.msg_stack.append('[D] command not found')
             return
-        
+    
+    def reset(self):
+        self.nodelist['init'] = [0]
+        self.messages = [
+            {
+                "role":"system",
+                "content":self.prompt
+            }
+        ]
+        self.msg = self.nodelist['init']
+        self.tic = 1
+        self.msg_stack.append('[D] bot reset')
+
+    def set_prompt(self,p):
+        self.prompt = prompt.load(p)
+        self.TIME_STAMP = round(time.time())
+        self.nodelist = {}
+        self.nodelist['init'] = [0]
+        self.messages = [
+            {
+                "role":"system",
+                "content":self.prompt
+            }
+        ]
+        self.msg = self.nodelist['init']
+        self.tic = 1
+        self.msg_stack.append('[D] bot prompt set')
+
     def CNMD(self,cmd):
         cmd_check = ''
         if cmd[0] == '#':
@@ -173,8 +179,8 @@ class CNMD():
             post = []
             for i in self.msg:
                 post.append(self.messages[i])
-            #response = bot.reply(post)
-            response = {'content':input('>>>'),'reasoning_content':'bruhhhh'}
+            response = bot.reply(post)
+            #response = {'content':input('>>>'),'reasoning_content':'bruhhhh'}
             if response:
                 content = response.get('content')
                 reasoning_content = response.get('reasoning_content')

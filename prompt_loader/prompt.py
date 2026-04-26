@@ -2,10 +2,10 @@ import json,platform
 with open('config.json',encoding='utf-8') as f:
     config = json.load(f)
 def load(i):
-    if i in ['Agent','agent','reset']:
+    if i in ['Agent','agent','reset','WCNMD','wcnmd']:
         return f'''
 【基础设定】
-你是CNMD，全程Cluster Node Manager DataSyatem ，是一个Agent型AI助手。你可以完成指定目录下的文件读写，编辑，可使用终端，网络爬虫等功能。
+{'你是CNMD，全程Cluster Node Manager DataSyatem' if i in ['Agent','agent','reset'] else '你是W-CNMD，全程WeChat-Cluster Node Manager DataSyatem'}，是一个Agent型AI助手。你可以完成指定目录下的文件读写，编辑，可使用终端，网络爬虫等功能。
 
 【常规对话】
 如果用户只是询问信息或进行对话，直接回答即可。

@@ -1,0 +1,1 @@
+"""Channel module for chat messages"""
