@@ -1,6 +1,6 @@
 from tools import fileedit,runcmd,webgrab
 from prompt_loader import prompt
-import bot
+import bot,node
 import copy,json,time,threading
 enable_log = True
 class CNMD():
@@ -11,15 +11,17 @@ class CNMD():
         self.stage_break = self.config['break']
         self.prompt = prompt.load('Agent')
         self.msg_stack = []
-        self.nodelist = {}
-        self.nodelist['init'] = [0]
+        self.nodelist = []
+        self.nodelist.append(node.node())
+        self.nodelist[0].id = 'init'
+        self.nodelist[0].message = [0]
         self.messages = [
             {
                 "role":"system",
                 "content":self.prompt
             }
         ]
-        self.msg = self.nodelist['init']
+        self.msg = self.nodelist[0].message
         self.tic = 1
         self.allow_reasoning = False
         self.help_text = '''可用命令：
@@ -50,45 +52,52 @@ class CNMD():
         cmd = cmd.split()
         if cmd[0] == '#node':
             if cmd[1] == 'save':
-                self.nodelist[cmd[2]] = copy.deepcopy(self.msg)
+                for i in self.nodelist:
+                    if i.id == cmd[2]:
+                        i.message = copy.deepcopy(self.msg)
+                        self.msg_stack.append(f'[D] node [{i.id}] overwrite')
+                        return
+                self.nodelist.append(node.node())
+                self.nodelist[-1].id = cmd[2]
+                self.nodelist[-1].message = copy.deepcopy(self.msg)
                 self.msg_stack.append(f'[D] [{cmd[2]}] save complete')
+                return
             elif cmd[1] == 'load':
-                temp = self.nodelist.get(cmd[2])
-                if temp:
-                    self.msg = copy.deepcopy(self.nodelist.get(cmd[2]))
-                    self.msg_stack.append('[D] load complete')
-                else:
-                    self.msg_stack.append('[D] node not found')
-            elif cmd[1] == 'loadf':
-                temp = self.nodelist.get(cmd[2])
-                if temp:
-                    try:
-                        with open(f'./logs/{temp}.json','r',encoding='utf-8') as f:
-                            self.messages = json.load(f)
-                        with open(f'./logs/{temp}_node.json','r',encoding='utf-8') as f:
-                            self.nodelist = json.load(f)
+                for i in self.nodelist:
+                    if i.id == cmd[2]:
+                        self.msg = copy.deepcopy(i.message)
                         self.msg_stack.append('[D] load complete')
-                    except:
-                        self.msg_stack.append('[D] file not found')
-                else:
-                    self.msg_stack.append('[D] load failed')
+                        return
+                self.msg_stack.append('[D] node not found')
+                return
             elif cmd[1] == 'list':
                 temp = f'[D] node list:\n'
-                for key,value in self.nodelist.items():
-                    temp += f'{key} {value}\n'
+                for i in self.nodelist:
+                    temp += f'{i.id} {i.message}\n'
                 self.msg_stack.append(temp.strip())
+                return
             elif cmd[1] == 'backward':
                 if len(self.msg) == 1:
                     self.msg_stack.append('[D] unable to backward')
-                self.nodelist['temp'] = copy.deepcopy(self.msg)
-                try:
-                    self.msg = self.msg[:-2*int(cmd[2])]
-                    self.msg_stack.append(f'[D] backward {cmd[2]} complete')
-                except:
-                    self.msg = self.msg[:-2]
-                    self.msg_stack.append('[D] backward complete')
+                    return
+                for i in self.nodelist:
+                    if i.id == 'temp':
+                        i.message = copy.deepcopy(self.msg)
+                    else:
+                        self.nodelist.append(node.node())
+                        self.nodelist[-1].id = 'temp'
+                        self.nodelist[-1].message = copy.deepcopy(self.msg)
+                    try:
+                        self.msg = self.msg[:-2*int(cmd[2])]
+                        self.msg_stack.append(f'[D] backward {cmd[2]} complete')
+                        return
+                    except:
+                        self.msg = self.msg[:-2]
+                        self.msg_stack.append('[D] backward complete')
+                        return
             else:
                 self.msg_stack.append('[D] command not found')
+                return
         elif cmd[0] == '#help':
             self.msg_stack.append(self.help_text)
             return
@@ -106,26 +115,30 @@ class CNMD():
             elif cmd[1] == 'prompt':
                 self.prompt = prompt.load(cmd[2])
                 self.TIME_STAMP = round(time.time())
-                self.nodelist = {}
-                self.nodelist['init'] = [0]
+                self.nodelist = []
+                self.nodelist.append(node.node())
+                self.nodelist[-1].id = 'init'
+                self.nodelist[-1].message = [0]
                 self.messages = [
                     {
                         "role":"system",
                         "content":self.prompt
                     }
                 ]
-                self.msg = self.nodelist['init']
+                self.msg = self.nodelist[0].message
                 self.tic = 1
                 self.msg_stack.append('[D] bot prompt set')
             elif cmd[1] == 'reset':
-                self.nodelist['init'] = [0]
+                self.nodelist.append(node.node())
+                self.nodelist[-1].id = 'init'
+                self.nodelist[-1].message = [0]
                 self.messages = [
                     {
                         "role":"system",
                         "content":self.prompt
                     }
                 ]
-                self.msg = self.nodelist['init']
+                self.msg = self.nodelist[-1].message
                 self.tic = 1
                 self.msg_stack.append('[D] bot reset')
                 return
@@ -173,8 +186,8 @@ class CNMD():
             post = []
             for i in self.msg:
                 post.append(self.messages[i])
-            #response = bot.reply(post)
-            response = {'content':input('>>>'),'reasoning_content':'bruhhhh'}
+            response = bot.reply(post)
+            #response = {'content':input('>>>'),'reasoning_content':'bruhhhh'}
             if response:
                 content = response.get('content')
                 reasoning_content = response.get('reasoning_content')
@@ -195,8 +208,6 @@ class CNMD():
                 self.tic += 1
                 with open(f'./logs/{self.TIME_STAMP}.json','w',encoding='utf-8') as f:
                     json.dump(self.messages,f,indent=4,ensure_ascii=False)
-                with open(f'./logs/{self.TIME_STAMP}_node.json','w',encoding='utf-8') as f:
-                    json.dump(self.nodelist,f,indent=4,ensure_ascii=False)
                 break
             else:
                 self.msg_stack.append(content.split('$$$')[0])
