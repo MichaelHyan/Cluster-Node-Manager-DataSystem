@@ -78,8 +78,6 @@ class WeixinChannel(ChatChannel):
 
         conf()["single_chat_prefix"] = [""]
 
-    # ── 生命周期 ──────────────────────────────────────────────────────
-
     def startup(self):
         """启动微信通道"""
         self._stop_event.clear()
@@ -157,8 +155,6 @@ class WeixinChannel(ChatChannel):
         self._context_tokens.clear()
         return True
 
-    # ── 二维码登录 ───────────────────────────────────────────────────
-
     @staticmethod
     def _print_qr(qrcode_url: str):
         """在终端打印二维码供扫描"""
@@ -176,7 +172,6 @@ class WeixinChannel(ChatChannel):
             try:
                 print(buf.getvalue())
             except UnicodeEncodeError:
-                # Windows GBK终端无法渲染Unicode块字符
                 print(f"\n  (终端不支持显示二维码，请使用链接扫码)")
                 print(f"  二维码链接: {qrcode_url}\n")
         except ImportError:
@@ -306,8 +301,6 @@ class WeixinChannel(ChatChannel):
             logger.info("[Weixin] 二维码登录已取消")
         return {}
 
-    # ── 消息接收循环 ─────────────────────────────────────────────────
-
     def _poll_loop(self):
         """主长轮询循环: getUpdates -> parse -> produce"""
         logger.info("[Weixin] 启动长轮询循环")
@@ -347,12 +340,10 @@ class WeixinChannel(ChatChannel):
 
                 consecutive_failures = 0
 
-                # 更新同步游标
                 new_buf = resp.get("get_updates_buf", "")
                 if new_buf:
                     self._get_updates_buf = new_buf
 
-                # 处理消息
                 msgs = resp.get("msgs", [])
                 for raw_msg in msgs:
                     try:
@@ -377,7 +368,7 @@ class WeixinChannel(ChatChannel):
     def _process_message(self, raw_msg: dict):
         """解析单条入站消息并提交到处理队列"""
         msg_type = raw_msg.get("message_type", 0)
-        if msg_type != 1:  # 仅处理用户消息(type=1)
+        if msg_type != 1:
             return
 
         msg_id = str(raw_msg.get("message_id", raw_msg.get("seq", "")))
@@ -401,7 +392,6 @@ class WeixinChannel(ChatChannel):
         logger.info(f"[Weixin] 收到消息: from={from_user} ctype={wx_msg.ctype} "
                     f"content={str(wx_msg.content)[:50]}")
 
-        # 文件缓存逻辑
         from channel.file_cache import get_file_cache
         file_cache = get_file_cache()
         session_id = from_user
@@ -443,8 +433,6 @@ class WeixinChannel(ChatChannel):
         if context:
             self.produce(context)
 
-    # ── _compose_context ───────────────────────────────────────────────
-
     def _compose_context(self, ctype: ContextType, content, **kwargs):
         """构建上下文"""
         context = Context(ctype, content)
@@ -468,8 +456,6 @@ class WeixinChannel(ChatChannel):
             context.content = content.strip()
 
         return context
-
-    # ── 消息发送 ─────────────────────────────────────────────────────
 
     def send(self, reply: Reply, context: Context):
         """发送回复消息"""
@@ -509,7 +495,6 @@ class WeixinChannel(ChatChannel):
                 logger.error(f"[Weixin] 文本发送失败: {e}")
             return
 
-        # 文本过长时分段发送
         chunks = self._split_text(text, TEXT_CHUNK_LIMIT)
         for i, chunk in enumerate(chunks):
             try:

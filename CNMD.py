@@ -1,8 +1,16 @@
-from tools import fileedit,runcmd,webgrab
+from tools import fileedit,runcmd,webgrab,timer
 from prompt_loader import prompt
 import bot
-import copy,json,time,threading
+import copy,json,time,threading,os
 enable_log = True
+
+if not os.path.exists('./files'):
+    os.makedirs('./files')
+if not os.path.exists('./logs'):
+    os.makedirs('./logs')
+if not os.path.exists('./bak'):
+    os.makedirs('./bak')
+
 class CNMD():
     def __init__(self,prompt = prompt):
         with open('config.json',encoding='utf-8') as f:
@@ -152,8 +160,7 @@ class CNMD():
             self.user_command(cmd)
             return
         while True:
-            if False:#此部分尚不稳定
-            #if cmd[0] == '/':
+            if cmd[:3] == '#I#':
                 self.messages.append(
                     {
                         "role":"user",
@@ -161,8 +168,52 @@ class CNMD():
                             {
                                 "type": "image_url",
                                 "image_url": {
-                                    "url": f"data:image/jpeg;base64,{cmd}"
+                                    "url": f"data:image/jpeg;base64,{cmd[3:]}"
                                 }
+                            },
+                            {
+                                "type": "text",
+                                "text": "已读取图片"
+                            }
+                        ]
+                    }
+                )
+            elif cmd[:3] == '#A#':
+                self.messages.append(
+                    {
+                        "role":"user",
+                        "content": [
+                            {
+                                "type": "input_audio",
+                                "input_audio": {
+                                    "data": cmd[3:],
+                                    "format": "mp3"
+                                }
+                            },
+                            {
+                                "type": "text",
+                                "text": "已读取音频"
+                            }
+                        ]
+                    }
+                )
+            elif cmd[:3] == '#V#':
+                self.messages.append(
+                    {
+                        "role":"user",
+                        "content": [
+                            {
+                                "type": "video_url",
+                                "video_url": {
+                                    "url": cmd[3:],
+                                    "format": "mp4",
+                                    "fps": 2,
+                                    "media_resolution": "default"
+                                }
+                            },
+                            {
+                                "type": "text",
+                                "text": "已读取图片"
                             }
                         ]
                     }
@@ -180,7 +231,8 @@ class CNMD():
             for i in self.msg:
                 post.append(self.messages[i])
             response = bot.reply(post)
-            #response = {'content':input('>>>'),'reasoning_content':'bruhhhh'}
+            #response = {'content':input('>>>'),'reasoning_content':'bruhhhh'}#bruhlang-debugger
+            #response = {'content':'bruh!!!','reasoning_content':'bruhhhh'}
             if response:
                 content = response.get('content')
                 reasoning_content = response.get('reasoning_content')
@@ -250,10 +302,21 @@ class CNMD():
                             path = sys_cmd[1]
                             cmd = fileedit.delete(path)
                             self.msg_stack.append(f'[D] command [delete] [{path}] excuted')
+                        elif sys_cmd[0] == 'time':
+                            cmd = timer.timer()
+                            self.msg_stack.append(f'[D] command [time] excuted')
                         elif sys_cmd[0] == 'imread':
                             path = sys_cmd[1]
-                            cmd = fileedit.encode_image(path)
-                            self.msg_stack.append(f'[D] command [imread] [{path}] excuted')
+                            cmd = fileedit.encode(path,'#I#')
+                            self.msg_stack.append(f'[D] command [image read] [{path}] excuted')
+                        elif sys_cmd[0] == 'auread':
+                            path = sys_cmd[1]
+                            cmd = fileedit.encode(path,'#A#')
+                            self.msg_stack.append(f'[D] command [audio read] [{path}] excuted')
+                        elif sys_cmd[0] == 'viread':
+                            path = sys_cmd[1]
+                            cmd = fileedit.encode(path,'#V#')
+                            self.msg_stack.append(f'[D] command [video read] [{path}] excuted')
                         elif sys_cmd[0] == 'web':
                             if sys_cmd[1] == 'grab':
                                 cmd = webgrab.get_html(sys_cmd[2])

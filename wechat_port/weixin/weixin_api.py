@@ -1,8 +1,3 @@
-"""
-简化的微信HTTP API客户端
-保留消息收发和二维码登录功能
-"""
-
 import base64
 import hashlib
 import os
@@ -52,7 +47,6 @@ def _ensure_trailing_slash(url: str) -> str:
 
 class WeixinApi:
     """简化的微信HTTP API客户端，仅支持消息收发"""
-
     def __init__(self, base_url: str = DEFAULT_BASE_URL, token: str = "",
                  cdn_base_url: str = CDN_BASE_URL):
         self.base_url = base_url
@@ -74,14 +68,12 @@ class WeixinApi:
             logger.error(f"[Weixin] API error {endpoint}: {e}")
             raise
 
-    # 消息接收 - 长轮询
     def get_updates(self, get_updates_buf: str = "", timeout: int = DEFAULT_LONG_POLL_TIMEOUT) -> dict:
         """获取新消息（长轮询）"""
         return self._post("ilink/bot/getupdates", {
             "get_updates_buf": get_updates_buf,
         }, timeout=timeout + 5)
 
-    # 消息发送 - 文本消息
     def send_text(self, to: str, text: str, context_token: str) -> dict:
         """发送文本消息"""
         return self._post("ilink/bot/sendmessage", {
@@ -89,14 +81,13 @@ class WeixinApi:
                 "from_user_id": "",
                 "to_user_id": to,
                 "client_id": uuid.uuid4().hex[:16],
-                "message_type": 2,  # BOT
-                "message_state": 2,  # FINISH
+                "message_type": 2,
+                "message_state": 2,
                 "item_list": [{"type": 1, "text_item": {"text": text}}],
                 "context_token": context_token,
             }
         })
 
-    # 消息发送 - 图片消息
     def send_image_item(self, to: str, context_token: str,
                         encrypt_query_param: str, aes_key_b64: str,
                         ciphertext_size: int, text: str = "") -> dict:
@@ -117,7 +108,6 @@ class WeixinApi:
         })
         return self._send_items(to, context_token, items)
 
-    # 消息发送 - 文件消息
     def send_file_item(self, to: str, context_token: str,
                        encrypt_query_param: str, aes_key_b64: str,
                        file_name: str, file_size: int, text: str = "") -> dict:
@@ -139,7 +129,6 @@ class WeixinApi:
         })
         return self._send_items(to, context_token, items)
 
-    # 消息发送 - 视频消息
     def send_video_item(self, to: str, context_token: str,
                         encrypt_query_param: str, aes_key_b64: str,
                         ciphertext_size: int, text: str = "") -> dict:
@@ -174,7 +163,6 @@ class WeixinApi:
             }
         })
 
-    # 获取上传URL
     def get_upload_url(self, filekey: str, media_type: int, to_user_id: str,
                        rawsize: int, rawfilemd5: str, filesize: int,
                        aeskey: str) -> dict:
@@ -189,8 +177,6 @@ class WeixinApi:
             "aeskey": aeskey,
             "no_need_thumb": True,
         })
-
-    # ── 二维码登录 ───────────────────────────────────────────────────
 
     def fetch_qr_code(self) -> dict:
         """获取二维码"""
@@ -214,8 +200,6 @@ class WeixinApi:
         except requests.exceptions.Timeout:
             return {"status": "wait"}
 
-
-# AES-128-ECB加密解密辅助函数
 def _aes_ecb_encrypt(data: bytes, key: bytes) -> bytes:
     from Crypto.Cipher import AES
     pad_len = 16 - (len(data) % 16)

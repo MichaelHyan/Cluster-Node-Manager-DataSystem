@@ -1,7 +1,7 @@
 import json
 import os
 import sys
-import time
+import time,requests
 import threading
 from datetime import datetime
 from queue import Queue
@@ -12,6 +12,7 @@ from wechat_port.weixin import (
 )
 from wechat_port.weixin.weixin_message import WeixinMessage
 from prompt_loader import prompt
+from tools import downloader
 
 cnm = CNMD.CNMD()
 cnm.set_prompt('wcnmd')
@@ -241,44 +242,100 @@ class WeixinClient:
         while True:
             if cnm.msg_stack:
                 msg = cnm.msg_stack.pop(0)
-                self.send_text(self.from_user, msg)
+                if '$#$' in msg:
+                    self.send_text(self.from_user, msg.split('$#$')[0])
+                    msg = msg.split('$#$')[1].split(maxsplit=1)
+                    self.timer_mission(msg[0],msg[1])
+                    self.send_text(self.from_user, f"[D] 已创建事件触发器，将于{int(msg[0])-round(time.time())}s后触发")
+                else:
+                    self.send_text(self.from_user, msg)
             time.sleep(0.5)
 
     def _process_message(self, raw_msg: dict):
         """处理单条消息"""
-        msg_type = raw_msg.get("message_type", 0)
-        if msg_type != 1:
-            return
+        msg_type = raw_msg.get('item_list', [{}])[0].get('type')
+        print(msg_type)
+        if msg_type == 1:
+            msg_id = str(raw_msg.get("message_id", raw_msg.get("seq", "")))
+            if self._received_msgs.get(msg_id):
+                return
+            self._received_msgs[msg_id] = True
 
-        msg_id = str(raw_msg.get("message_id", raw_msg.get("seq", "")))
-        if self._received_msgs.get(msg_id):
-            return
-        self._received_msgs[msg_id] = True
+            from_user = raw_msg.get("from_user_id", "")
+            context_token = raw_msg.get("context_token", "")
 
-        from_user = raw_msg.get("from_user_id", "")
-        context_token = raw_msg.get("context_token", "")
+            self.from_user = from_user
 
-        self.from_user = from_user
+            if context_token and from_user:
+                self._context_tokens[from_user] = context_token
 
-        if context_token and from_user:
-            self._context_tokens[from_user] = context_token
+            item_list = raw_msg.get("item_list", [])
+            text_content = ""
 
-        item_list = raw_msg.get("item_list", [])
-        text_content = ""
+            for item in item_list:
+                itype = item.get("type", 0)
+                if itype == 1:
+                    text_item = item.get("text_item", {})
+                    text_content = text_item.get("text", "")
 
-        for item in item_list:
-            itype = item.get("type", 0)
-            if itype == 1:
-                text_item = item.get("text_item", {})
-                text_content = text_item.get("text", "")
+            if text_content:
+                print(f"\n[Weixin] 收到消息 from={from_user} content={text_content}")
+                
+                with self.msg_queue_lock:
+                    self.msg_queue.append(text_content)
+                    print(f"[Weixin] 消息已存入队列，当前队列长度: {len(self.msg_queue)}")
+        elif msg_type == 2:
+            full_url = raw_msg['item_list'][0]['image_item']['media']['full_url']
+            encrypt_query_param = raw_msg['item_list'][0]['image_item']['media']['encrypt_query_param']
+            aes_key = raw_msg['item_list'][0]['image_item']['media']['aes_key']
+            file_path = f'{round(time.time())}.jpg'
+            downloader.download(full_url, encrypt_query_param, aes_key, file_path)
+            self.send_text(self.from_user, f'[D] 已保存图像')
+        elif msg_type == 3:
+            msg_id = str(raw_msg.get("message_id", raw_msg.get("seq", "")))
+            if self._received_msgs.get(msg_id):
+                return
+            self._received_msgs[msg_id] = True
+            from_user = raw_msg.get("from_user_id", "")
+            context_token = raw_msg.get('item_list', [{}])[0].get('voice_item', {}).get('text')
 
-        if text_content:
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            print(f"\n[Weixin] 收到消息 from={from_user} content={text_content}")
-            
-            with self.msg_queue_lock:
-                self.msg_queue.append(text_content)
-                print(f"[Weixin] 消息已存入队列，当前队列长度: {len(self.msg_queue)}")
+            self.from_user = from_user
+            if context_token and from_user:
+                self._context_tokens[from_user] = context_token
+            if context_token:
+                print(f"\n[Weixin] 收到消息 from={from_user} content={context_token}")
+                with self.msg_queue_lock:
+                    self.msg_queue.append(context_token)
+                    print(f"[Weixin] 消息已存入队列，当前队列长度: {len(self.msg_queue)}")
+        elif msg_type == 4:
+            full_url = raw_msg['item_list'][0]['file_item']['media']['full_url']
+            encrypt_query_param = raw_msg['item_list'][0]['file_item']['media']['encrypt_query_param']
+            aes_key = raw_msg['item_list'][0]['file_item']['media']['aes_key']
+            file_path = raw_msg.get('item_list', [{}])[0].get('file_item', {}).get('file_name')
+            downloader.download(full_url, encrypt_query_param, aes_key, file_path)
+            self.send_text(self.from_user, f'[D] 已保存文件')
+        elif msg_type == 5:
+            full_url = raw_msg['item_list'][0]['video_item']['media']['full_url']
+            encrypt_query_param = raw_msg['item_list'][0]['video_item']['media']['encrypt_query_param']
+            aes_key = raw_msg['item_list'][0]['video_item']['media']['aes_key']
+            file_path = f'{round(time.time())}.mp4'
+            downloader.download(full_url, encrypt_query_param, aes_key, file_path)
+            self.send_text(self.from_user, f'[D] 已保存视频')
+
+    def download_image(self,url, save_path):
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                with open(save_path, 'wb') as f:
+                    f.write(response.content)
+                print(f"图片已保存到: {save_path}")
+                return True
+            else:
+                print(f"下载失败，状态码: {response.status_code}")
+                return False
+        except Exception as e:
+            print(f"下载图片时出错: {e}")
+            return False
 
     def _reply_loop(self):
         """回复线程循环"""
@@ -362,14 +419,25 @@ class WeixinClient:
         if self.reply_thread and self.reply_thread.is_alive():
             self.reply_thread.join(timeout=2)
 
+    def timer_mission(self, timer, quest):
+        print(f"[Weixin] 计时器开始 {round(time.time())} -> {timer}")
+        def _run():
+            nonlocal timer
+            try:
+                timer = float(timer)
+                while True:
+                    current_time = time.time()
+                    if current_time >= timer:
+                        print(f"[Weixin] 计时器触发")
+                        self.msg_queue.append(quest)
+                        break
+                    time.sleep(0.1)
+            except:
+                return
+        thread = threading.Thread(target=_run, daemon=True)
+        thread.start()
 
 def main():
-    """主函数"""
-    print("=" * 60)
-    print("  简化的微信客户端")
-    print("  支持二维码登录、记忆登录和消息收发")
-    print("=" * 60)
-    
     client = WeixinClient()
 
     msg_thread = threading.Thread(target=client.message_handler, daemon=True)
@@ -388,5 +456,4 @@ def main():
 
 
 if __name__ == "__main__":
-
     main()

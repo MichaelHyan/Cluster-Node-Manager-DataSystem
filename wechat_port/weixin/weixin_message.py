@@ -13,14 +13,11 @@ from ..common.log import logger
 from ..common.utils import expand_path
 from ..config import conf
 
-
-# 消息类型常量
 ITEM_TEXT = 1
 ITEM_IMAGE = 2
 ITEM_VOICE = 3
 ITEM_FILE = 4
 ITEM_VIDEO = 5
-
 
 def _get_tmp_dir() -> str:
     """获取临时目录"""
@@ -39,7 +36,7 @@ class WeixinMessage(ChatMessage):
         self.msg_id = str(msg.get("message_id", msg.get("seq", uuid.uuid4().hex[:8])))
         self.create_time = msg.get("create_time_ms", 0)
         self.context_token = msg.get("context_token", "")
-        self.is_group = False  # 仅支持私聊
+        self.is_group = False
         self.is_at = False
 
         from_user_id = msg.get("from_user_id", "")
@@ -56,7 +53,6 @@ class WeixinMessage(ChatMessage):
 
         item_list = msg.get("item_list", [])
 
-        # 解析消息项: 查找文本和媒体
         text_body = ""
         media_item = None
         media_type = None
@@ -79,7 +75,6 @@ class WeixinMessage(ChatMessage):
                     if ref_title or ref_body:
                         parts = [p for p in [ref_title, ref_body] if p]
                         ref_text = f"[引用: {' | '.join(parts)}]\n"
-                    # 如果引用是媒体项，将其视为要下载的媒体
                     if ref_mi.get("type") in (ITEM_IMAGE, ITEM_VIDEO, ITEM_FILE):
                         media_item = ref_mi
                         media_type = ref_mi.get("type")
@@ -90,7 +85,6 @@ class WeixinMessage(ChatMessage):
                 if voice_text:
                     text_body = voice_text
                 else:
-                    # 没有转录的语音 - 下载音频
                     media_item = item
                     media_type = ITEM_VOICE
 
@@ -99,11 +93,9 @@ class WeixinMessage(ChatMessage):
                     media_item = item
                     media_type = itype
 
-        # 确定ctype和content
         if media_item and not text_body:
             self._setup_media(media_item, media_type, cdn_base_url)
         elif media_item and text_body:
-            # 文本+媒体: 下载媒体，在文本中附加为文件引用
             self.ctype = ContextType.TEXT
             media_path = self._download_media(media_item, media_type, cdn_base_url)
             if media_path:
@@ -177,7 +169,6 @@ class WeixinMessage(ChatMessage):
         media = info.get("media", {})
 
         encrypt_param = media.get("encrypt_query_param", "")
-        # aes_key可以在image_item.aeskey(十六进制)或media.aes_key(b64)中
         aes_key = info.get("aeskey", "") or media.get("aes_key", "")
 
         if not encrypt_param or not aes_key:

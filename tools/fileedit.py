@@ -53,9 +53,9 @@ def delete(path):
     except Exception as e:
         return str(e)
 
-def encode_image(image_path):
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode("utf-8")
+def encode(path,prex=''):
+    with open(path, "rb") as file:
+        return f'{prex}{base64.b64encode(file.read()).decode("utf-8")}'
 
 def backup(src_dir, dst_dir='./bak/'):
     if not os.path.exists(src_dir):
