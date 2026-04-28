@@ -3,19 +3,16 @@ import os
 import sys
 import time,requests
 import threading
-from datetime import datetime
-from queue import Queue
 import CNMD
 from wechat_port.weixin import (
     weixinApi, upload_media_to_cdn,
     DEFAULT_BASE_URL, CDN_BASE_URL,
 )
-from wechat_port.weixin.weixin_message import WeixinMessage
-from prompt_loader import prompt
-from tools import downloader
+from tools import downloader,sender
 
 cnm = CNMD.CNMD()
 cnm.set_prompt('wcnmd')
+cnm.allow_cmd = ['timer','send']
 
 QR_LOGIN_TIMEOUT_S = 480
 QR_MAX_REFRESHES = 10
@@ -34,6 +31,7 @@ class WeixinClient:
         self.msg_queue = []
         self.msg_queue_lock = threading.Lock()
         self.reply_thread = None
+        self.token = ''
         self.from_user = ''
 
     def _load_credentials(self) -> dict:
@@ -217,7 +215,7 @@ class WeixinClient:
             token, result_base_url = self._login_with_retry(base_url)
             if not token:
                 return False
-
+        self.token = token
         self.api = weixinApi(base_url=result_base_url, token=token, cdn_base_url=cdn_base_url)
         print(f"[Weixin] 微信通道已启动，凭证保存在 {self._credentials_path}")
         print(f"[Weixin] 如需重新扫码登录请删除该文件后重启")
@@ -242,11 +240,16 @@ class WeixinClient:
         while True:
             if cnm.msg_stack:
                 msg = cnm.msg_stack.pop(0)
-                if '$#$' in msg:
-                    self.send_text(self.from_user, msg.split('$#$')[0])
-                    msg = msg.split('$#$')[1].split(maxsplit=1)
-                    self.timer_mission(msg[0],msg[1])
-                    self.send_text(self.from_user, f"[D] 已创建事件触发器，将于{int(msg[0])-round(time.time())}s后触发")
+                if '$$$' in msg:
+                    msg = msg.split('$$$')
+                    content = msg[0]
+                    sys_cmd = msg[1].split(' ',maxsplit=2)
+                    if sys_cmd[0] == 'timer':
+                        self.send_text(self.from_user, content)
+                        self.timer_mission(sys_cmd[1],sys_cmd[2])
+                        self.send_text(self.from_user, f"[D] 已创建事件触发器，将于{int(sys_cmd[1])-round(time.time())}s后触发")
+                    elif sys_cmd[0] == 'send':
+                        sender.send(self.from_user,'',self.token,sys_cmd[1])
                 else:
                     self.send_text(self.from_user, msg)
             time.sleep(0.5)

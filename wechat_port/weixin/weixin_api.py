@@ -5,7 +5,7 @@ import random
 import struct
 import time
 import uuid
-
+from urllib.parse import quote
 import requests
 
 from wechat_port.common.log import logger
@@ -264,8 +264,6 @@ def upload_media_to_cdn(api: WeixinApi, file_path: str, to_user_id: str,
     cipher_size = _aes_ecb_padded_size(raw_size)
 
     encrypted = _aes_ecb_encrypt(raw_data, aes_key)
-
-    from urllib.parse import quote
 
     download_param = None
     last_error = None

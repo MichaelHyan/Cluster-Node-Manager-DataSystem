@@ -30,6 +30,7 @@ class CNMD():
         self.msg = self.nodelist['init']
         self.tic = 1
         self.allow_reasoning = False
+        self.allow_cmd = []
         self.help_text = '''可用命令：
 1. 节点操作 (#node)
 #node save <节点名称>      - 保存当前对话状态到指定节点
@@ -232,7 +233,7 @@ class CNMD():
                 post.append(self.messages[i])
             response = bot.reply(post)
             #response = {'content':input('>>>'),'reasoning_content':'bruhhhh'}#bruhlang-debugger
-            #response = {'content':'bruh!!!','reasoning_content':'bruhhhh'}
+            #response = {'content':f'bruh!!!','reasoning_content':'bruhhhh'}
             if response:
                 content = response.get('content')
                 reasoning_content = response.get('reasoning_content')
@@ -242,7 +243,10 @@ class CNMD():
                 content = '[D] response failed'
                 reasoning_content = '[D] response failed'
             if '$$$' not in content:
-                self.msg_stack.append(content)
+                if content == '':
+                    self.msg_stack.append('[D] response failed, try again.')
+                else:
+                    self.msg_stack.append(content)
                 self.messages.append(
                     {
                         "role": "system",
@@ -281,6 +285,9 @@ class CNMD():
                     else:
                         cmd_check = copy.deepcopy(sys_cmd)
                         sys_cmd = sys_cmd.split(' ',maxsplit=2)
+                        if sys_cmd[0] in self.allow_cmd:#外部指令
+                            self.msg_stack.append(content)
+                            break
                         if sys_cmd[0] == 'dir':
                             path = sys_cmd[1]
                             cmd = fileedit.dir(path)
