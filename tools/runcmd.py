@@ -1,6 +1,6 @@
 import subprocess
 import threading
-import time
+import time,os
 
 cmd_output = ''
 def cmd(cmd):
@@ -22,10 +22,16 @@ def cmd(cmd):
     except Exception as e:
         cmd_output += f'{e}\n'
 
-if __name__ == "__main__":
-    cmd_input = ['python','D:/git/Cluster-Node-Manager-DataSystem/test.py']
-    t = threading.Thread(target=cmd, args=(cmd_input,))
-    t.start()
-    time.sleep(1)
-    print(cmd_output)
-
+def pws(cmd):
+    global cmd_output
+    powershell_path = os.path.join(os.environ.get("SYSTEMROOT", "C:\\Windows"), "System32", "WindowsPowerShell", "v1.0", "powershell.exe")
+    try:
+        result = subprocess.run(
+            [powershell_path, "-Command", cmd],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        cmd_output += f'{result.stdout}\n'
+    except Exception as e:
+        cmd_output += f'{e}\n'

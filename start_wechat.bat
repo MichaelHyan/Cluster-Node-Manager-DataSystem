@@ -1,0 +1,1 @@
+python CNMD_wechat.py
