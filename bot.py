@@ -22,8 +22,10 @@ def reply(message):
                 else:
                     reasoning_content = None 
         except Exception as e:
-            print(str(e))
-            return None
+            return {
+            'content':f'[D] response failed: {e}',
+            'reasoning_content':'[D] response failed'
+        }
         result = {
             'content':content,
             'reasoning_content':reasoning_content

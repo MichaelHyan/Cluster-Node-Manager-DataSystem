@@ -12,7 +12,7 @@ from tools import downloader,sender
 
 cnm = CNMD.CNMD()
 cnm.set_prompt('wcnmd')
-cnm.allow_cmd = ['timer','send']
+cnm.allow_cmd = ['timer','send','response']
 
 QR_LOGIN_TIMEOUT_S = 480
 QR_MAX_REFRESHES = 10
@@ -33,6 +33,7 @@ class WeixinClient:
         self.reply_thread = None
         self.token = ''
         self.from_user = ''
+        self.xunsi = False
 
     def _load_credentials(self) -> dict:
         """从JSON文件加载保存的凭证"""
@@ -250,6 +251,11 @@ class WeixinClient:
                         self.send_text(self.from_user, f"[D] 已创建事件触发器，将于{int(sys_cmd[1])-round(time.time())}s后触发")
                     elif sys_cmd[0] == 'send':
                         sender.send(self.from_user,'',self.token,sys_cmd[1])
+                    elif sys_cmd[0] == 'response':
+                        if sys_cmd[1] == 'True':
+                            self.xunsi = True
+                        else:
+                            self.xunsi = False
                 else:
                     self.send_text(self.from_user, msg)
             time.sleep(0.5)
@@ -350,7 +356,7 @@ class WeixinClient:
                     if self.msg_queue:
                         msg = self.msg_queue.pop(0)
                         print(f"[Weixin] 处理队列消息: {msg}")
-                        if msg[0] != '#':
+                        if msg[0] != '#' and self.xunsi:
                             self.send_text(self.from_user, "[D] Agent开始寻思。")
                         cnm.CNMD(msg)
                     else:

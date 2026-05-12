@@ -1,6 +1,7 @@
 from tools import fileedit,runcmd,webgrab,timer
 from prompt_loader import prompt
 import bot
+import bruhlang
 import copy,json,time,threading,os
 enable_log = True
 
@@ -31,30 +32,26 @@ class CNMD():
         self.tic = 1
         self.allow_reasoning = False
         self.allow_cmd = []
+        
+        self.mission = []
+        self.is_mission = False
+
         self.help_text = '''可用命令：
 1. 节点操作 (#node)
 #node save <节点名称>      - 保存当前对话状态到指定节点
-#node load <节点名称>      - 从指定节点加载对话状态
+#node load <节点名称>      - 从内存中加载指定节点的对话状态
 #node list                - 列出所有已保存的节点
 #node backward <轮数>     - 回退指定轮数的对话（默认回退1轮）
+
 2. 系统命令
 #backup                   - 备份当前工作目录
 #help                     - 显示此帮助信息
-3. Agent命令
-#bot reasoning True/False - 开关返回思考内容
-#bot reset                - 清空记录
-#bot prompt               - 切换人设（测试接口）
-使用示例：
-#node save important_conversation
-#node load important_conversation
-#node backward 2
-#backup
 
-注意：
-- 节点名称可以是任意字符串，用于标识保存的对话状态
-- backward命令用于撤销最近的对话轮次
-- 备份文件会保存在备份目录中'''
-    
+3. Agent命令
+#bot reasoning <状态>     - 开关返回思考内容 (状态可选: on/true/True/1 或 off/false/False/0)
+#bot reset                - 清空对话记录
+#bot prompt <人设名>      - 切换人设（测试接口）'''
+
     def user_command(self,cmd):
         cmd = cmd.split()
         if cmd[0] == '#node':
@@ -129,6 +126,7 @@ class CNMD():
             return
     
     def reset(self):
+        self.TIME_STAMP = round(time.time())
         self.nodelist['init'] = [0]
         self.messages = [
             {
@@ -155,12 +153,29 @@ class CNMD():
         self.tic = 1
         self.msg_stack.append('[D] bot prompt set')
 
+    def mission_init(self):
+        self.prompt = prompt.load('msm')
+        self.TIME_STAMP = round(time.time())
+        self.nodelist = {}
+        self.nodelist['init'] = [0]
+        self.messages = [
+            {
+                "role":"system",
+                "content":self.prompt
+            }
+        ]
+        self.msg = self.nodelist['init']
+        self.tic = 1
+        self.msg_stack.append('[D] bot mission mode set')
+
     def CNMD(self,cmd):
         cmd_check = ''
-        if cmd[0] == '#':
+        if cmd[0] == '#' and not self.is_mission:
             self.user_command(cmd)
             return
         while True:
+            if self.is_mission and len(self.mission) != 0:
+                cmd = self.mission.pop()
             if cmd[:3] == '#I#':
                 self.messages.append(
                     {
@@ -232,8 +247,8 @@ class CNMD():
             for i in self.msg:
                 post.append(self.messages[i])
             response = bot.reply(post)
-            #response = {'content':input('>>>'),'reasoning_content':'bruhhhh'}#bruhlang-debugger
-            #response = {'content':f'bruh!!!','reasoning_content':'bruhhhh'}
+            #response = {'content':input('>>>'),'reasoning_content':'bruhhhh'}
+            #response = {'content':bruhlang.next(),'reasoning_content':'bruhhhh'}
             if response:
                 content = response.get('content')
                 reasoning_content = response.get('reasoning_content')
@@ -242,7 +257,7 @@ class CNMD():
             else:
                 content = '[D] response failed'
                 reasoning_content = '[D] response failed'
-            if '$$$' not in content:
+            if '$$$' not in content and not self.is_mission:
                 if content == '':
                     self.msg_stack.append('[D] response failed, try again.')
                 else:
@@ -270,13 +285,18 @@ class CNMD():
                 )
                 self.msg.append(self.tic)
                 self.tic += 1
-                sys_cmd = content.split('$$$')[1]
+                try:
+                    sys_cmd = content.split('$$$')[1]
+                except:
+                    sys_cmd = 'pass '
                 if enable_log:
                     with open(f'./logs/{self.TIME_STAMP}.json','w',encoding='utf-8') as f:
                         json.dump(self.messages,f,indent=4,ensure_ascii=False)
+                    with open(f'./logs/{self.TIME_STAMP}_node.json','w',encoding='utf-8') as f:
+                        json.dump(self.nodelist,f,indent=4,ensure_ascii=False)
                 try:
-                    if cmd_check == sys_cmd:
-                        if self.stage_break:
+                    if cmd_check != '' and cmd_check == sys_cmd:
+                        if self.stage_break and not self.is_mission:
                             self.msg_stack.append(f'[D] command refused, stage terminated')
                             break
                         else:
@@ -284,11 +304,14 @@ class CNMD():
                             cmd = 'Agent已驳回重复指令，进行下一项任务。'
                     else:
                         cmd_check = copy.deepcopy(sys_cmd)
-                        sys_cmd = sys_cmd.split(' ',maxsplit=2)
+                        sys_cmd = sys_cmd.split(' ',maxsplit=1)
                         if sys_cmd[0] in self.allow_cmd:#外部指令
                             self.msg_stack.append(content)
-                            break
-                        if sys_cmd[0] == 'dir':
+                            if not self.is_mission:
+                                break
+                        if sys_cmd[0] == 'pass':
+                            cmd = '请继续任务'
+                        elif sys_cmd[0] == 'dir':
                             path = sys_cmd[1]
                             cmd = fileedit.dir(path)
                             self.msg_stack.append(f'[D] command [dir] excuted')
@@ -301,8 +324,9 @@ class CNMD():
                             cmd = fileedit.read(path)
                             self.msg_stack.append(f'[D] command [read] [{path}] excuted')
                         elif sys_cmd[0] == 'write':
-                            path = sys_cmd[1]
-                            content = sys_cmd[2]
+                            sys_cmd = sys_cmd[1].split(' ',maxsplit=1)
+                            path = sys_cmd[0]
+                            content = sys_cmd[1]
                             cmd = fileedit.write(path,content)
                             self.msg_stack.append(f'[D] command [write] [{path}] excuted')
                         elif sys_cmd[0] == 'delete':
@@ -336,32 +360,62 @@ class CNMD():
                             if sys_cmd[1] == 'ping':
                                 cmd = webgrab.ping(sys_cmd[2])
                                 self.msg_stack.append(f'[D] command [ping] [{sys_cmd[2]}] excuted')
-                        elif sys_cmd[0] == 'pws':
-                            print(sys_cmd)
-                            runcmd.cmd_output=''
-                            runcmd.pws(content.split('$$$')[1][4:])
-                            self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
-                            time.sleep(5)
-                            cmd = copy.deepcopy(runcmd.cmd_output)
                         elif sys_cmd[0] == 'cmd':
-                            if sys_cmd[1] == '-i':
+                            sys_cmd = sys_cmd[1].split(' ',maxsplit=1)
+                            if sys_cmd[0] == '-p':
                                 runcmd.cmd_output=''
-                                runcmd.cmd(sys_cmd[2].split())
-                                self.msg_stack.append(f'[D] command [{sys_cmd[2]}] excuted')
+                                runcmd.pws(sys_cmd[1])
+                                self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
                                 time.sleep(5)
                                 cmd = copy.deepcopy(runcmd.cmd_output)
-                            elif sys_cmd[1] == '-w':
+                            if sys_cmd[0] == '-i':
                                 runcmd.cmd_output=''
-                                t = threading.Thread(target=runcmd.cmd, args=(sys_cmd[2].split(' '),))
+                                runcmd.cmd(sys_cmd[1].split())
+                                self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
+                                time.sleep(5)
+                                cmd = copy.deepcopy(runcmd.cmd_output)
+                            elif sys_cmd[0] == '-w':
+                                runcmd.cmd_output=''
+                                t = threading.Thread(target=runcmd.cmd, args=(sys_cmd[1].split(' '),))
                                 t.start()
                                 cmd = 'command excuted'
-                                self.msg_stack.append(f'[D] command [{sys_cmd[2]}] excuted')
-                            elif sys_cmd[1] == '-o':
+                                self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
+                            elif sys_cmd[0] == '-o':
                                 cmd = copy.deepcopy(runcmd.cmd_output)
                                 self.msg_stack.append(f'[D] command [cmd output] excuted')
+                        elif sys_cmd[0] == 'msm':
+                            sys_cmd = sys_cmd[1].split(' ',maxsplit=1)
+                            if sys_cmd[0] == 'set':
+                                m = sys_cmd[1].split('#')
+                                for i in m:
+                                    if m != '':
+                                        self.mission.append(i)
+                                cmd = '已设置命令列表'
+                                self.msg_stack.append(f'[D] command [mission set] excuted')
+                            elif sys_cmd[0] == 'start':
+                                self.is_mission = True
+                                temp_nodelist = copy.deepcopy(self.nodelist)
+                                temp_msg = copy.deepcopy(self.msg)
+                                temp_messages = copy.deepcopy(self.messages)
+                                temp_tic = copy.deepcopy(self.tic)
+                                self.mission_init()
+                                self.msg_stack.append(f'[D] command [mission start] excuted')
+                        elif sys_cmd[0] == 'quit':#msm
+                            if len(self.mission) != 0:
+                                self.msg_stack.append(f'[D] command [mission quit] excuted')
+                                self.mission_init()
+                            else:
+                                self.is_mission = False
+                                self.messages = copy.deepcopy(temp_messages)
+                                self.nodelist = copy.deepcopy(temp_nodelist)
+                                self.msg = copy.deepcopy(temp_msg)
+                                self.tic = copy.deepcopy(temp_tic)
+                                self.TIME_STAMP = round(time.time())
+                                cmd = '全部子任务已完成'
                         else:
                             cmd = 'command not found'
                 except Exception as e:
+                    self.msg_stack.append(f'[D] {str(e)}')
                     cmd = str(e)
         return
 
