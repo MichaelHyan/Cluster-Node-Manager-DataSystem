@@ -14,3 +14,4 @@ description: "skill列表"
 - weather - 获取地点或旅行规划的当前天气、降雨、温度和预报。
 - personality_create - 人格提取skill模块。
 - personality_load - 人设加载模块。
+- psych_assessment - 通过自然对话隐式评估用户心理状况。

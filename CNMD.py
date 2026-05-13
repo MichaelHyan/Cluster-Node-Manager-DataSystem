@@ -276,7 +276,8 @@ class CNMD():
                     json.dump(self.nodelist,f,indent=4,ensure_ascii=False)
                 break
             else:
-                self.msg_stack.append(content.split('$$$')[0])
+                if content.split('$$$')[0] != '':
+                    self.msg_stack.append(content.split('$$$')[0])
                 self.messages.append(
                     {
                         "role": "system",
@@ -324,7 +325,7 @@ class CNMD():
                             cmd = fileedit.read(path)
                             self.msg_stack.append(f'[D] command [read] [{path}] excuted')
                         elif sys_cmd[0] == 'write':
-                            sys_cmd = sys_cmd[1].split(' ',maxsplit=1)
+                            sys_cmd = sys_cmd[1].split(maxsplit=1)
                             path = sys_cmd[0]
                             content = sys_cmd[1]
                             cmd = fileedit.write(path,content)
@@ -349,17 +350,19 @@ class CNMD():
                             cmd = fileedit.encode(path,'#V#')
                             self.msg_stack.append(f'[D] command [video read] [{path}] excuted')
                         elif sys_cmd[0] == 'web':
-                            if sys_cmd[1] == 'grab':
-                                cmd = webgrab.get_html(sys_cmd[2])
-                                self.msg_stack.append(f'[D] command [webgrab] [{sys_cmd[2]}] excuted')
-                            if sys_cmd[1] == 'setheader':
-                                header = json.loads(sys_cmd[2])
+                            sys_cmd = sys_cmd[1].split(maxsplit=1)
+                            if sys_cmd[0] == 'grab':
+                                print('web')
+                                cmd = webgrab.get_html(sys_cmd[1])
+                                self.msg_stack.append(f'[D] command [webgrab] [{sys_cmd[1]}] excuted')
+                            if sys_cmd[0] == 'setheader':
+                                header = json.loads(sys_cmd[1])
                                 webgrab.headers = header
                                 cmd = f'web header set {header}'
                                 self.msg_stack.append(f'[D] command [webgetheader] [{header}] excuted')
-                            if sys_cmd[1] == 'ping':
-                                cmd = webgrab.ping(sys_cmd[2])
-                                self.msg_stack.append(f'[D] command [ping] [{sys_cmd[2]}] excuted')
+                            if sys_cmd[0] == 'ping':
+                                cmd = webgrab.ping(sys_cmd[1])
+                                self.msg_stack.append(f'[D] command [ping] [{sys_cmd[1]}] excuted')
                         elif sys_cmd[0] == 'cmd':
                             sys_cmd = sys_cmd[1].split(' ',maxsplit=1)
                             if sys_cmd[0] == '-p':

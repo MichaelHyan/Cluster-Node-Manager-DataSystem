@@ -1,9 +1,6 @@
-lang = [
-'bruh!$$$msm set bruh!',
-'bruh!!$$$msm start',
-'bruh!',
-'bruh!!',
-'bruh!!!'
-]
+lang = []
 def next():
-    return f'[bruhlang] {lang.pop(0)}'
+    if lang:
+        return f'[bruhlang] {lang.pop(0)}'
+    else:
+        return ''
