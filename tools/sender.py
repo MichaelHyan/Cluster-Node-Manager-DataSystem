@@ -1,11 +1,5 @@
-"""
-微信文件发送独立程序
-使用微信ilink bot API发送文件
-"""
-
 import os
 import sys
-import json
 import time
 import uuid
 import base64
@@ -20,7 +14,7 @@ DEFAULT_API_TIMEOUT = 15
 CHANNEL_VERSION = "2.0.0"
 CLIENT_VERSION = "131072"
 
-BASE_URL = DEFAULT_BASE_URL  # API基础URL
+BASE_URL = DEFAULT_BASE_URL
 
 
 def _random_wechat_uin() -> str:

@@ -189,7 +189,7 @@ class CNMD():
                             },
                             {
                                 "type": "text",
-                                "text": "已读取图片"
+                                "text": "[A] 已读取图片"
                             }
                         ]
                     }
@@ -208,7 +208,7 @@ class CNMD():
                             },
                             {
                                 "type": "text",
-                                "text": "已读取音频"
+                                "text": "[A] 已读取音频"
                             }
                         ]
                     }
@@ -229,7 +229,7 @@ class CNMD():
                             },
                             {
                                 "type": "text",
-                                "text": "已读取图片"
+                                "text": "[A] 已读取视频"
                             }
                         ]
                     }
@@ -302,27 +302,31 @@ class CNMD():
                             break
                         else:
                             self.msg_stack.append(f'[D] command refused')
-                            cmd = 'Agent已驳回重复指令，进行下一项任务。'
+                            cmd = '[A] Agent已驳回重复指令，进行下一项任务。'
                     else:
                         cmd_check = copy.deepcopy(sys_cmd)
                         sys_cmd = sys_cmd.split(' ',maxsplit=1)
-                        if sys_cmd[0] in self.allow_cmd:#外部指令
+                        if sys_cmd[0] in self.allow_cmd:
                             self.msg_stack.append(content)
                             if not self.is_mission:
                                 break
                         if sys_cmd[0] == 'pass':
-                            cmd = '请继续任务'
+                            cmd = '[A] 请继续任务'
                         elif sys_cmd[0] == 'dir':
                             path = sys_cmd[1]
                             cmd = fileedit.dir(path)
-                            self.msg_stack.append(f'[D] command [dir] excuted')
+                            self.msg_stack.append(f'[D] command [dir] [{path}] excuted')
                         elif sys_cmd[0] == 'listdir':
                             path = sys_cmd[1]
                             cmd = fileedit.list_dir(path)
-                            self.msg_stack.append(f'[D] command [listdir] excuted')
+                            self.msg_stack.append(f'[D] command [listdir] [{path}] excuted')
                         elif sys_cmd[0] == 'read':
                             path = sys_cmd[1]
-                            cmd = fileedit.read(path)
+                            if len(path.split(maxsplit=1)) == 2:
+                                c,path = path.split(maxsplit=1)
+                                cmd = fileedit.read(path,int(c))
+                            else:
+                                cmd = fileedit.read(path,0)
                             self.msg_stack.append(f'[D] command [read] [{path}] excuted')
                         elif sys_cmd[0] == 'write':
                             sys_cmd = sys_cmd[1].split(maxsplit=1)
@@ -352,7 +356,6 @@ class CNMD():
                         elif sys_cmd[0] == 'web':
                             sys_cmd = sys_cmd[1].split(maxsplit=1)
                             if sys_cmd[0] == 'grab':
-                                print('web')
                                 cmd = webgrab.get_html(sys_cmd[1])
                                 self.msg_stack.append(f'[D] command [webgrab] [{sys_cmd[1]}] excuted')
                             if sys_cmd[0] == 'setheader':
@@ -381,7 +384,7 @@ class CNMD():
                                 runcmd.cmd_output=''
                                 t = threading.Thread(target=runcmd.cmd, args=(sys_cmd[1].split(' '),))
                                 t.start()
-                                cmd = 'command excuted'
+                                cmd = '[A] command excuted'
                                 self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
                             elif sys_cmd[0] == '-o':
                                 cmd = copy.deepcopy(runcmd.cmd_output)
@@ -393,7 +396,7 @@ class CNMD():
                                 for i in m:
                                     if m != '':
                                         self.mission.append(i)
-                                cmd = '已设置命令列表'
+                                cmd = '[A] 已设置命令列表'
                                 self.msg_stack.append(f'[D] command [mission set] excuted')
                             elif sys_cmd[0] == 'start':
                                 self.is_mission = True
@@ -414,12 +417,12 @@ class CNMD():
                                 self.msg = copy.deepcopy(temp_msg)
                                 self.tic = copy.deepcopy(temp_tic)
                                 self.TIME_STAMP = round(time.time())
-                                cmd = '全部子任务已完成'
+                                cmd = '[A] 全部子任务已完成'
                         else:
-                            cmd = 'command not found'
+                            cmd = '[A] command not found'
                 except Exception as e:
                     self.msg_stack.append(f'[D] {str(e)}')
-                    cmd = str(e)
+                    cmd = f'[A] {str(e)}'
         return
 
 def stack_print(stack):

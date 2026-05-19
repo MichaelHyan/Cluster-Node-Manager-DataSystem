@@ -1,4 +1,5 @@
 import os,base64,shutil,subprocess
+SIZE_LIMIT = 1
 
 def dir(path):
     try:
@@ -20,26 +21,36 @@ def dir(path):
     except Exception as e:
         return str(e)
 
-def read(path):
+def read(path,len = 0):
     try:
-        # 检查文件大小
         file_size = os.path.getsize(path)
-        if file_size > 100 * 1024 * 1024:  # 100MB限制
-            return f'[ERROR] 文件过大 ({file_size} bytes)，超过100MB限制，无法读取'
-        with open(path, 'r', encoding = 'utf-8') as f:
-            return f.read()
+        if len != 0:
+            lines = ''
+            with open(path, 'r', encoding='utf-8') as file:
+                for i in range(len):
+                    line = file.readline()
+                    if not line:
+                        break
+                    lines += f'{line}'
+            return lines
+        else:
+            if file_size > SIZE_LIMIT * 1024 * 1024:
+                return f'[A] 文件过大 ({file_size} bytes)，超过{SIZE_LIMIT}MB限制，无法读取'
+            with open(path, 'r', encoding = 'utf-8') as f:
+                return f.read()
     except Exception as e:
         return str(e)
 
 def write(path, content):
     try:
-        # 检查内容大小
+        '''
         content_size = len(content.encode('utf-8'))
-        if content_size > 100 * 1024 * 1024:  # 100MB限制
-            return f'[ERROR] 内容过大 ({content_size} bytes)，超过100MB限制，无法写入'
+        if content_size > SIZE_LIMIT * 1024 * 1024:
+            return f'[A] 内容过大 ({content_size} bytes)，超过{SIZE_LIMIT}MB限制，无法写入'
+        '''
         with open(path, 'w', encoding = 'utf-8') as f:
             f.write(content)
-        return 'write complete'
+        return '[A] write complete'
     except Exception as e:
         return str(e)
 
@@ -49,7 +60,7 @@ def delete(path):
             os.rmdir(path)
         elif os.path.isfile(path):
             os.remove(path)
-        return 'delete complete'
+        return '[A] delete complete'
     except Exception as e:
         return str(e)
 

@@ -27,7 +27,7 @@ def get_html(url):
             html = html_bytes.decode('gbk')
         return html
     except Exception as e:
-        return f'{e}'
+        return f'[A] {e}'
 
 
 def ping(host):
@@ -39,4 +39,4 @@ def ping(host):
         return response.stdout
 
     except Exception as e:
-        return f'{e}'
+        return f'[A] {e}'

@@ -174,7 +174,7 @@ class WeixinClient:
 
     def _login_with_retry(self, base_url: str) -> tuple:
         """尝试二维码登录，失败后等待停止
-        成功返回 (token, base_url)，失败返回 ("", "")"""
+        成功返回 (token, base_url)，失败返回"""
         print("[Weixin] 未找到token，开始二维码登录...")
         login_result = self._qr_login(base_url)
         if login_result:
@@ -226,12 +226,10 @@ class WeixinClient:
         """发送文本消息"""
         context_token = self._context_tokens.get(to, "")
         if not context_token:
-            print(f"[Weixin] 未找到用户 {to} 的context_token，无法发送")
             return False
 
         try:
             self.api.send_text(to, text, context_token)
-            print(f"[Weixin] 文本已发送到 {to}")
             return True
         except Exception as e:
             print(f"[Weixin] 文本发送失败: {e}")
@@ -263,7 +261,6 @@ class WeixinClient:
     def _process_message(self, raw_msg: dict):
         """处理单条消息"""
         msg_type = raw_msg.get('item_list', [{}])[0].get('type')
-        print(msg_type)
         if msg_type == 1:
             msg_id = str(raw_msg.get("message_id", raw_msg.get("seq", "")))
             if self._received_msgs.get(msg_id):
@@ -288,11 +285,12 @@ class WeixinClient:
                     text_content = text_item.get("text", "")
 
             if text_content:
-                print(f"\n[Weixin] 收到消息 from={from_user} content={text_content}")
-                
-                with self.msg_queue_lock:
-                    self.msg_queue.append(text_content)
-                    print(f"[Weixin] 消息已存入队列，当前队列长度: {len(self.msg_queue)}")
+                print(f"\n[Weixin] from={from_user} content={text_content}")
+                if text_content.strip() == '#restart':
+                    self._restart_reply_thread()
+                else:
+                    with self.msg_queue_lock:
+                        self.msg_queue.append(text_content)
         elif msg_type == 2:
             full_url = raw_msg['item_list'][0]['image_item']['media']['full_url']
             encrypt_query_param = raw_msg['item_list'][0]['image_item']['media']['encrypt_query_param']
@@ -307,15 +305,13 @@ class WeixinClient:
             self._received_msgs[msg_id] = True
             from_user = raw_msg.get("from_user_id", "")
             context_token = raw_msg.get('item_list', [{}])[0].get('voice_item', {}).get('text')
-
             self.from_user = from_user
             if context_token and from_user:
                 self._context_tokens[from_user] = context_token
             if context_token:
-                print(f"\n[Weixin] 收到消息 from={from_user} content={context_token}")
+                print(f"\n[Weixin] from={from_user} content={context_token}")
                 with self.msg_queue_lock:
                     self.msg_queue.append(context_token)
-                    print(f"[Weixin] 消息已存入队列，当前队列长度: {len(self.msg_queue)}")
         elif msg_type == 4:
             full_url = raw_msg['item_list'][0]['file_item']['media']['full_url']
             encrypt_query_param = raw_msg['item_list'][0]['file_item']['media']['encrypt_query_param']
@@ -331,34 +327,47 @@ class WeixinClient:
             downloader.download(full_url, encrypt_query_param, aes_key, file_path)
             self.send_text(self.from_user, f'[D] 已保存视频')
 
-    def download_image(self,url, save_path):
-        try:
-            response = requests.get(url)
-            if response.status_code == 200:
-                with open(save_path, 'wb') as f:
-                    f.write(response.content)
-                print(f"图片已保存到: {save_path}")
-                return True
-            else:
-                print(f"下载失败，状态码: {response.status_code}")
-                return False
-        except Exception as e:
-            print(f"下载图片时出错: {e}")
-            return False
+    def _restart_reply_thread(self):
+        """终止当前的回复线程并重新启动"""
+        print("[Weixin] 收到 #restart 指令，正在重启回复线程...")
+        self._stop_event.set()
+        
+        if self.reply_thread and self.reply_thread.is_alive():
+            self.reply_thread.join(timeout=3)
+            if self.reply_thread.is_alive():
+                print("[Weixin] 旧回复线程未能在规定时间内结束，已被强制忽略")
+        
+        with self.msg_queue_lock:
+            self.msg_queue.clear()
+            
+        self._stop_event.clear()
+        
+        self.reply_thread = threading.Thread(target=self._reply_loop, daemon=True)
+        self.reply_thread.start()
+        
+        self.send_text(self.from_user, "[D] 回复线程已重启")
 
     def _reply_loop(self):
-        """回复线程循环"""
-        print("[Weixin] 启动回复线程")
-        
+        """回复线程循环"""        
         while not self._stop_event.is_set():
             try:
                 with self.msg_queue_lock:
                     if self.msg_queue:
                         msg = self.msg_queue.pop(0)
-                        print(f"[Weixin] 处理队列消息: {msg}")
                         if msg[0] != '#' and self.xunsi:
                             self.send_text(self.from_user, "[D] Agent开始寻思。")
-                        cnm.CNMD(msg)
+                        
+                        def _run_cnm(m):
+                            cnm.CNMD(m)
+                            
+                        cnm_thread = threading.Thread(target=_run_cnm, args=(msg,))
+                        cnm_thread.start()
+                        
+                        while cnm_thread.is_alive():
+                            if self._stop_event.is_set():
+                                print("[Weixin] 检测到重启指令，终止当前回复进程")
+                                return 
+                            cnm_thread.join(timeout=0.1)
                     else:
                         pass
                 self._stop_event.wait(0.1)
@@ -366,20 +375,15 @@ class WeixinClient:
             except Exception as e:
                 print(f"[Weixin] 回复线程异常: {e}")
                 self._stop_event.wait(1)
-        
-        print("[Weixin] 回复线程结束")
 
     def _poll_loop(self):
         """主长轮询循环"""
         print("[Weixin] 启动长轮询循环")
-
         while not self._stop_event.is_set():
             try:
                 resp = self.api.get_updates(self._get_updates_buf)
-
                 ret = resp.get("ret", 0)
                 errcode = resp.get("errcode", 0)
-
                 is_error = (ret != 0) or (errcode != 0)
                 if is_error:
                     errmsg = resp.get("errmsg", "")
