@@ -283,7 +283,6 @@ class WeixinClient:
                 if itype == 1:
                     text_item = item.get("text_item", {})
                     text_content = text_item.get("text", "")
-
             if text_content:
                 print(f"\n[Weixin] from={from_user} content={text_content}")
                 if text_content.strip() == '#restart':
@@ -326,6 +325,8 @@ class WeixinClient:
             file_path = f'{round(time.time())}.mp4'
             downloader.download(full_url, encrypt_query_param, aes_key, file_path)
             self.send_text(self.from_user, f'[D] 已保存视频')
+        else:
+            print(f"[Weixin] 收到未知类型消息: {msg_type}")
 
     def _restart_reply_thread(self):
         """终止当前的回复线程并重新启动"""

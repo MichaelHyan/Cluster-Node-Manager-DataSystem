@@ -1,4 +1,4 @@
-from tools import fileedit,runcmd,webgrab,timer
+from tools import fileedit,runcmd,webgrab,timer,memory
 from prompt_loader import prompt
 import bot
 import bruhlang
@@ -52,7 +52,7 @@ class CNMD():
 #bot reset                - 清空对话记录
 #bot prompt <人设名>      - 切换人设（测试接口）'''
 
-    def user_command(self,cmd):
+    def _user_command(self,cmd):
         cmd = cmd.split()
         if cmd[0] == '#node':
             if cmd[1] == 'save':
@@ -112,7 +112,7 @@ class CNMD():
             elif cmd[1] == 'prompt':
                 self.set_prompt(cmd[2])
             elif cmd[1] == 'reset':
-                self.reset()
+                self._reset()
                 return
             else:
                 self.msg_stack.append('[D] command not found')
@@ -121,11 +121,143 @@ class CNMD():
             fileedit.backup(self.config['base_path'])
             self.msg_stack.append('[D] backup created')
             return
+        elif cmd[0] == '#mem':
+            if cmd[1] == 'save':
+                post = []
+                for i in self.msg:
+                    post.append(self.messages[i])
+                memory.save(post)
+                self.msg_stack.append('[D] memory saved')
+                return
+            elif cmd[1] == 'analyse':
+                memory.analyse()
+                self.msg_stack.append('[D] memory saved')
         else:
             self.msg_stack.append('[D] command not found')
             return
     
-    def reset(self):
+    def _system_command(self,sys_cmd):
+        if sys_cmd[0] == 'pass':
+            cmd = '[A] 请继续任务'
+        elif sys_cmd[0] == 'dir':
+            path = sys_cmd[1]
+            cmd = fileedit.dir(path)
+            self.msg_stack.append(f'[D] command [dir] [{path}] excuted')
+        elif sys_cmd[0] == 'listdir':
+            path = sys_cmd[1]
+            cmd = fileedit.list_dir(path)
+            self.msg_stack.append(f'[D] command [listdir] [{path}] excuted')
+        elif sys_cmd[0] == 'read':
+            path = sys_cmd[1]
+            if len(path.split(maxsplit=1)) == 2:
+                c,path = path.split(maxsplit=1)
+                cmd = fileedit.read(path,int(c))
+            else:
+                cmd = fileedit.read(path,0)
+            self.msg_stack.append(f'[D] command [read] [{path}] excuted')
+        elif sys_cmd[0] == 'write':
+            sys_cmd = sys_cmd[1].split(maxsplit=1)
+            path = sys_cmd[0]
+            content = sys_cmd[1]
+            cmd = fileedit.write(path,content)
+            self.msg_stack.append(f'[D] command [write] [{path}] excuted')
+        elif sys_cmd[0] == 'delete':
+            path = sys_cmd[1]
+            cmd = fileedit.delete(path)
+            self.msg_stack.append(f'[D] command [delete] [{path}] excuted')
+        elif sys_cmd[0] == 'time':
+            cmd = timer.timer()
+            self.msg_stack.append(f'[D] command [time] excuted')
+        elif sys_cmd[0] == 'imread':
+            path = sys_cmd[1]
+            cmd = fileedit.encode(path,'#I#')
+            self.msg_stack.append(f'[D] command [image read] [{path}] excuted')
+        elif sys_cmd[0] == 'auread':
+            path = sys_cmd[1]
+            cmd = fileedit.encode(path,'#A#')
+            self.msg_stack.append(f'[D] command [audio read] [{path}] excuted')
+        elif sys_cmd[0] == 'viread':
+            path = sys_cmd[1]
+            cmd = fileedit.encode(path,'#V#')
+            self.msg_stack.append(f'[D] command [video read] [{path}] excuted')
+        elif sys_cmd[0] == 'web':
+            sys_cmd = sys_cmd[1].split(maxsplit=1)
+            if sys_cmd[0] == 'grab':
+                cmd = webgrab.get_html(sys_cmd[1])
+                self.msg_stack.append(f'[D] command [webgrab] [{sys_cmd[1]}] excuted')
+            if sys_cmd[0] == 'setheader':
+                header = json.loads(sys_cmd[1])
+                webgrab.headers = header
+                cmd = f'web header set {header}'
+                self.msg_stack.append(f'[D] command [webgetheader] [{header}] excuted')
+            if sys_cmd[0] == 'ping':
+                cmd = webgrab.ping(sys_cmd[1])
+                self.msg_stack.append(f'[D] command [ping] [{sys_cmd[1]}] excuted')
+        elif sys_cmd[0] == 'cmd':
+            sys_cmd = sys_cmd[1].split(' ',maxsplit=1)
+            if sys_cmd[0] == '-p':
+                runcmd.cmd_output=''
+                runcmd.pws(sys_cmd[1])
+                self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
+                time.sleep(5)
+                cmd = copy.deepcopy(runcmd.cmd_output)
+            if sys_cmd[0] == '-i':
+                runcmd.cmd_output=''
+                runcmd.cmd(sys_cmd[1].split())
+                self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
+                time.sleep(5)
+                cmd = copy.deepcopy(runcmd.cmd_output)
+            elif sys_cmd[0] == '-w':
+                runcmd.cmd_output=''
+                t = threading.Thread(target=runcmd.cmd, args=(sys_cmd[1].split(' '),))
+                t.start()
+                cmd = '[A] command excuted'
+                self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
+            elif sys_cmd[0] == '-o':
+                cmd = copy.deepcopy(runcmd.cmd_output)
+                self.msg_stack.append(f'[D] command [cmd output] excuted')
+        elif sys_cmd[0] == 'memory':
+            mem = memory.mem_load(sys_cmd[1].strip().split())
+            if mem != None:
+                cmd = '[A] 搜索结果：\n'
+                for i in mem:
+                    cmd += f'{i[0]}:{i[1]}\n'
+            else:
+                cmd = '[A] 没有搜索到结果'
+        elif sys_cmd[0] == 'msm':
+            sys_cmd = sys_cmd[1].split(' ',maxsplit=1)
+            if sys_cmd[0] == 'set':
+                m = sys_cmd[1].split('#')
+                for i in m:
+                    if m != '':
+                        self.mission.append(i)
+                cmd = '[A] 已设置命令列表'
+                self.msg_stack.append(f'[D] command [mission set] excuted')
+            elif sys_cmd[0] == 'start':
+                self.is_mission = True
+                temp_nodelist = copy.deepcopy(self.nodelist)
+                temp_msg = copy.deepcopy(self.msg)
+                temp_messages = copy.deepcopy(self.messages)
+                temp_tic = copy.deepcopy(self.tic)
+                self._mission_init()
+                self.msg_stack.append(f'[D] command [mission start] excuted')
+        elif sys_cmd[0] == 'quit':#msm
+            if len(self.mission) != 0:
+                self.msg_stack.append(f'[D] command [mission quit] excuted')
+                self._mission_init()
+            else:
+                self.is_mission = False
+                self.messages = copy.deepcopy(temp_messages)
+                self.nodelist = copy.deepcopy(temp_nodelist)
+                self.msg = copy.deepcopy(temp_msg)
+                self.tic = copy.deepcopy(temp_tic)
+                self.TIME_STAMP = round(time.time())
+                cmd = '[A] 全部子任务已完成'
+        else:
+            cmd = '[A] command not found'
+        return cmd
+    
+    def _reset(self):
         self.TIME_STAMP = round(time.time())
         self.nodelist['init'] = [0]
         self.messages = [
@@ -153,7 +285,7 @@ class CNMD():
         self.tic = 1
         self.msg_stack.append('[D] bot prompt set')
 
-    def mission_init(self):
+    def _mission_init(self):
         self.prompt = prompt.load('msm')
         self.TIME_STAMP = round(time.time())
         self.nodelist = {}
@@ -171,7 +303,7 @@ class CNMD():
     def CNMD(self,cmd):
         cmd_check = ''
         if cmd[0] == '#' and not self.is_mission:
-            self.user_command(cmd)
+            self._user_command(cmd)
             return
         while True:
             if self.is_mission and len(self.mission) != 0:
@@ -310,116 +442,7 @@ class CNMD():
                             self.msg_stack.append(content)
                             if not self.is_mission:
                                 break
-                        if sys_cmd[0] == 'pass':
-                            cmd = '[A] 请继续任务'
-                        elif sys_cmd[0] == 'dir':
-                            path = sys_cmd[1]
-                            cmd = fileedit.dir(path)
-                            self.msg_stack.append(f'[D] command [dir] [{path}] excuted')
-                        elif sys_cmd[0] == 'listdir':
-                            path = sys_cmd[1]
-                            cmd = fileedit.list_dir(path)
-                            self.msg_stack.append(f'[D] command [listdir] [{path}] excuted')
-                        elif sys_cmd[0] == 'read':
-                            path = sys_cmd[1]
-                            if len(path.split(maxsplit=1)) == 2:
-                                c,path = path.split(maxsplit=1)
-                                cmd = fileedit.read(path,int(c))
-                            else:
-                                cmd = fileedit.read(path,0)
-                            self.msg_stack.append(f'[D] command [read] [{path}] excuted')
-                        elif sys_cmd[0] == 'write':
-                            sys_cmd = sys_cmd[1].split(maxsplit=1)
-                            path = sys_cmd[0]
-                            content = sys_cmd[1]
-                            cmd = fileedit.write(path,content)
-                            self.msg_stack.append(f'[D] command [write] [{path}] excuted')
-                        elif sys_cmd[0] == 'delete':
-                            path = sys_cmd[1]
-                            cmd = fileedit.delete(path)
-                            self.msg_stack.append(f'[D] command [delete] [{path}] excuted')
-                        elif sys_cmd[0] == 'time':
-                            cmd = timer.timer()
-                            self.msg_stack.append(f'[D] command [time] excuted')
-                        elif sys_cmd[0] == 'imread':
-                            path = sys_cmd[1]
-                            cmd = fileedit.encode(path,'#I#')
-                            self.msg_stack.append(f'[D] command [image read] [{path}] excuted')
-                        elif sys_cmd[0] == 'auread':
-                            path = sys_cmd[1]
-                            cmd = fileedit.encode(path,'#A#')
-                            self.msg_stack.append(f'[D] command [audio read] [{path}] excuted')
-                        elif sys_cmd[0] == 'viread':
-                            path = sys_cmd[1]
-                            cmd = fileedit.encode(path,'#V#')
-                            self.msg_stack.append(f'[D] command [video read] [{path}] excuted')
-                        elif sys_cmd[0] == 'web':
-                            sys_cmd = sys_cmd[1].split(maxsplit=1)
-                            if sys_cmd[0] == 'grab':
-                                cmd = webgrab.get_html(sys_cmd[1])
-                                self.msg_stack.append(f'[D] command [webgrab] [{sys_cmd[1]}] excuted')
-                            if sys_cmd[0] == 'setheader':
-                                header = json.loads(sys_cmd[1])
-                                webgrab.headers = header
-                                cmd = f'web header set {header}'
-                                self.msg_stack.append(f'[D] command [webgetheader] [{header}] excuted')
-                            if sys_cmd[0] == 'ping':
-                                cmd = webgrab.ping(sys_cmd[1])
-                                self.msg_stack.append(f'[D] command [ping] [{sys_cmd[1]}] excuted')
-                        elif sys_cmd[0] == 'cmd':
-                            sys_cmd = sys_cmd[1].split(' ',maxsplit=1)
-                            if sys_cmd[0] == '-p':
-                                runcmd.cmd_output=''
-                                runcmd.pws(sys_cmd[1])
-                                self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
-                                time.sleep(5)
-                                cmd = copy.deepcopy(runcmd.cmd_output)
-                            if sys_cmd[0] == '-i':
-                                runcmd.cmd_output=''
-                                runcmd.cmd(sys_cmd[1].split())
-                                self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
-                                time.sleep(5)
-                                cmd = copy.deepcopy(runcmd.cmd_output)
-                            elif sys_cmd[0] == '-w':
-                                runcmd.cmd_output=''
-                                t = threading.Thread(target=runcmd.cmd, args=(sys_cmd[1].split(' '),))
-                                t.start()
-                                cmd = '[A] command excuted'
-                                self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
-                            elif sys_cmd[0] == '-o':
-                                cmd = copy.deepcopy(runcmd.cmd_output)
-                                self.msg_stack.append(f'[D] command [cmd output] excuted')
-                        elif sys_cmd[0] == 'msm':
-                            sys_cmd = sys_cmd[1].split(' ',maxsplit=1)
-                            if sys_cmd[0] == 'set':
-                                m = sys_cmd[1].split('#')
-                                for i in m:
-                                    if m != '':
-                                        self.mission.append(i)
-                                cmd = '[A] 已设置命令列表'
-                                self.msg_stack.append(f'[D] command [mission set] excuted')
-                            elif sys_cmd[0] == 'start':
-                                self.is_mission = True
-                                temp_nodelist = copy.deepcopy(self.nodelist)
-                                temp_msg = copy.deepcopy(self.msg)
-                                temp_messages = copy.deepcopy(self.messages)
-                                temp_tic = copy.deepcopy(self.tic)
-                                self.mission_init()
-                                self.msg_stack.append(f'[D] command [mission start] excuted')
-                        elif sys_cmd[0] == 'quit':#msm
-                            if len(self.mission) != 0:
-                                self.msg_stack.append(f'[D] command [mission quit] excuted')
-                                self.mission_init()
-                            else:
-                                self.is_mission = False
-                                self.messages = copy.deepcopy(temp_messages)
-                                self.nodelist = copy.deepcopy(temp_nodelist)
-                                self.msg = copy.deepcopy(temp_msg)
-                                self.tic = copy.deepcopy(temp_tic)
-                                self.TIME_STAMP = round(time.time())
-                                cmd = '[A] 全部子任务已完成'
-                        else:
-                            cmd = '[A] command not found'
+                        cmd = self._system_command(sys_cmd)
                 except Exception as e:
                     self.msg_stack.append(f'[D] {str(e)}')
                     cmd = f'[A] {str(e)}'
