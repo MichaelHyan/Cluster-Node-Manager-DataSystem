@@ -1,0 +1,22 @@
+{
+    "agent_base":{
+        "persona":"agent_base",
+        "skills":"skill_base",
+        "extra":"agent_base"
+    },
+    "agent_wechat":{
+        "persona":"agent_wechat",
+        "skills":"skill_base",
+        "extra":"agent_base"
+    },
+    "hyan":{
+        "persona":"hyan",
+        "skills":"skill_base",
+        "extra":"none"
+    },
+    "neko":{
+        "persona":"neko",
+        "skills":"none",
+        "extra":"none"
+    }
+}

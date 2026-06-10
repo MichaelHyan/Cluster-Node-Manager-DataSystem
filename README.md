@@ -1,3 +1,4 @@
+@ -1,285 +1 @@
 # Cluster Node Manager DataSystem (CNMD)
 
 **集群节点式对话管理系统 — 让 AI Agent 拥有文件操作、终端执行、网络访问与多模态处理能力**
@@ -22,34 +23,6 @@ CNMD 借助类节点会话管理模式，支持对话状态的保存、加载与
 - **💬 多端接入**：支持命令行、Web UI、微信三种交互模式
 - **📝 自动日志记录**：每次会话自动创建日志并记录完整对话内容
 - **🎭 人设系统**：支持加载不同人设与人格，适应多种对话场景
-
-## 🏗️ 系统架构
-
-```text
-CNMD
-├── CNMD.py               # 后端核心引擎（节点管理、指令解析、Agent循环）
-├── CNMD_wechat.py        # 微信客户端主程序（消息收发、二维码登录、定时器）
-├── CNMD_webui.py         # Web UI 服务端（Flask-SocketIO 实时通讯）
-├── bot.py                # LLM API 调用封装（OpenAI 兼容接口）
-├── bruhlang.py           # 调试用模块
-├── config.json           # 全局配置文件
-├── prompt_loader/        # Prompt 加载器（Agent/WCNMD/MSM/Neko 等人设）
-├── tools/                # Agent 工具集（包含 memory.py 记忆模块）
-├── skills/               # 技能文档目录
-├── persona/              # 人设文档目录
-├── database/             # 数据存储目录
-│   └── mem.json          # 记忆数据库文件
-├── wechat_port/          # 微信协议层
-│   ├── bridge/           # 上下文桥接
-│   ├── channel/          # 消息通道
-│   ├── common/           # 公共工具
-│   ├── config/           # 配置管理
-│   └── weixin/           # 微信 API 封装
-├── templates/
-│   └── index.html        # Web UI 前端页面
-└── wechat/
-    └── credentials.json  # 微信登录凭证（自动生成）
-```
 
 ## 🚀 快速开始
 
@@ -87,6 +60,16 @@ pip install -r requirements.txt
 | `MODEL` | 使用的模型名称 |
 | `base_path` | Agent 文件操作的根目录 |
 | `break` | 重复指令处理方式，`true` 为直接中断任务，`false` 为拒绝但继续 |
+
+你可以修改config_model.json对OpenAPI参数进行指定，如修改temperature:
+
+```json
+{
+    "temperature": 1,
+    "其他参数名": "其他参数"
+}
+```
+注：此配置仅对支持该功能的大模型生效，如deepseek-v3.2不会因该参数的存在调节输出。
 
 ### 3. 启动
 
@@ -203,16 +186,40 @@ CNMD 内置可扩展的技能模块系统，技能文档位于 `./skills/` 目�
 | 人设加载 | `personality_load.md` | 加载预设人设 |
 | 心理评估 | `psych_assessment.md` | 隐式心理状况评估 |
 
+## 系统提示词自定义
+
+允许对系统提示词进行自定义。
+
+### 结构
+
+系统提示词包含以下部分：
+- 基础人设/persona：基础设定
+- 基础能力/skills：基础agent工具
+- 特殊规则/extra：额外规则，根据需要定制
+
+以上均以md skill形式保存在prompt_loader目录下，根据需要配置。
+
+### 配置方式
+
+1.自行将人设文件(persona)，规则文件(extra)分别放置于对应目录，确保为md格式。
+1.1人设可自行编辑，或使用Agent的人设提取模块辅助生成。
+1.2建议使用默认工具文件。本项目使用自定义工具链，不支持tool calling api。
+1.3三个文件均非必要，可在配置文件对应位置填"none"表示不存在该部分。建议保留基础人设。
+2.在配置文件(./prompt_loader/config.json)中加入以下信息：
+
+```json
+"[你的预设名]":{
+        "persona":"[你的人设文件名，不包含后缀]",
+        "skills":"skill_base",//使用默认工具，不希望有该能力可以留空
+        "extra":"[你的规则文件名，不包含后缀]"
+    }
+```
+3.在程序中将cnm.set_prompt('agent_wechat')语句改为cnm.set_prompt('[你的预设名]')
+
+
 ## 🎭 人设系统
 
-CNMD 支持通过 Prompt 加载不同人设，内置多种人设模式：
-
-| 人设 | 说明 |
-|------|------|
-| `Agent` / `agent` | 默认 Agent 模式，具备完整工具链 |
-| `WCNMD` / `wcnmd` | 微信模式专用 Agent |
-| `msm` | 子智能体模式，无法与用户对话，自主执行任务 |
-| `neko` | 角色扮演模式 |
+CNMD 支持通过 Prompt 加载不同人设。
 
 自定义人设文件可放置于 `./persona/` 目录。
 
@@ -237,16 +244,6 @@ CNMD 内置了基于大模型辅助的记忆数据库系统，解决了大模型
 ### 数据结构
 
 记忆数据存储在 `database/mem.json` 中，采用扁平化的 JSON 键值对格式。键（Key）为信息类型或特征词，值（Value）为具体的记忆内容。
-
-```json
-{
-    "用户名": "韩言",
-    "技术栈": "后端开发",
-    "当前职业": "程序员",
-    "偏好语言": "BruhLang",
-    "工作习惯": "先确定当事人意图和立场，然后根据实际行为判断"
-}
-```
 
 ### 工作原理
 

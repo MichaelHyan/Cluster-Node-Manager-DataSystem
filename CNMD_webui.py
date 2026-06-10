@@ -13,6 +13,7 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 online_users = {}
 
 cnm = CNMD.CNMD()
+cnm.set_prompt('agent_base')
 msg_queue = []
 
 queue_lock = threading.Lock()

@@ -1,16 +1,21 @@
 import os,json
 from openai import OpenAI
+with open('config.json',encoding='utf-8') as f:
+    config = json.load(f)
+with open('config_model.json',encoding='utf-8') as f:
+    config_model = json.load(f)
+client = OpenAI(
+    api_key=config['API_KEY'],
+    base_url=config['BASE_URL']
+)
+
 def reply(message):
     try:
-        with open('config.json',encoding='utf-8') as f:
-            config = json.load(f)
-        client = OpenAI(
-            api_key=config['API_KEY'],
-            base_url=config['BASE_URL'])
         response = client.chat.completions.create(
             model=config['MODEL'],
             messages=message,
-            stream=False
+            stream=False,
+            **config_model
         )
         try:
             if response.choices and len(response.choices) > 0:

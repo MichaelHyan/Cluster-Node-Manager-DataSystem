@@ -1,6 +1,6 @@
 from tools import fileedit,runcmd,webgrab,timer,memory
 from prompt_loader import prompt
-import bot
+import tools.bot as bot
 import bruhlang
 import copy,json,time,threading,os
 enable_log = True
@@ -18,7 +18,7 @@ class CNMD():
             self.config = json.load(f)
         self.TIME_STAMP = round(time.time())
         self.stage_break = self.config['break']
-        self.prompt = prompt.load('Agent')
+        self.prompt = prompt.load('agent_base')
         self.msg_stack = []
         self.nodelist = {}
         self.nodelist['init'] = [0]

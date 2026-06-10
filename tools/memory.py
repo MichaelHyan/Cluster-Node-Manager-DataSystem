@@ -1,5 +1,5 @@
 import json
-import bot
+import tools.bot as bot
 def mem_save(dict):
     with open(r'.\database\mem.json','r', encoding='utf-8') as f:
         data = json.load(f)

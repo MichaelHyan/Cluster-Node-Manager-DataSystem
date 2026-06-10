@@ -11,7 +11,7 @@ from wechat_port.weixin import (
 from tools import downloader,sender
 
 cnm = CNMD.CNMD()
-cnm.set_prompt('wcnmd')
+cnm.set_prompt('agent_wechat')
 cnm.allow_cmd = ['timer','send','response']
 
 QR_LOGIN_TIMEOUT_S = 480
