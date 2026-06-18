@@ -1,6 +1,7 @@
 from tools import fileedit,runcmd,webgrab,timer,memory
 from prompt_loader import prompt
 import tools.bot as bot
+import tools.lang as lang
 import bruhlang
 import copy,json,time,threading,os
 enable_log = True
@@ -32,6 +33,7 @@ class CNMD():
         self.tic = 1
         self.allow_reasoning = False
         self.allow_cmd = []
+        self.mslock = True
         
         self.mission = []
         self.is_mission = False
@@ -57,14 +59,14 @@ class CNMD():
         if cmd[0] == '#node':
             if cmd[1] == 'save':
                 self.nodelist[cmd[2]] = copy.deepcopy(self.msg)
-                self.msg_stack.append(f'[D] [{cmd[2]}] save complete')
+                self.msg_stack.append(f'{lang.lang['cnmd.node.savecomplete']}{cmd[2]}')
             elif cmd[1] == 'load':
                 temp = self.nodelist.get(cmd[2])
                 if temp:
                     self.msg = copy.deepcopy(self.nodelist.get(cmd[2]))
-                    self.msg_stack.append('[D] load complete')
+                    self.msg_stack.append(f'{lang.lang['cnmd.node.loadcomplete']}{cmd[2]}')
                 else:
-                    self.msg_stack.append('[D] node not found')
+                    self.msg_stack.append(f'{lang.lang['cnmd.node.nodenotfound']}')
             elif cmd[1] == 'loadf':
                 temp = self.nodelist.get(cmd[2])
                 if temp:
@@ -73,28 +75,28 @@ class CNMD():
                             self.messages = json.load(f)
                         with open(f'./logs/{temp}_node.json','r',encoding='utf-8') as f:
                             self.nodelist = json.load(f)
-                        self.msg_stack.append('[D] load complete')
+                        self.msg_stack.append(lang.lang['cnmd.log.loadcomplete'])
                     except:
-                        self.msg_stack.append('[D] file not found')
+                        self.msg_stack.append(lang.lang['cnmd.log.filenotfound'])
                 else:
-                    self.msg_stack.append('[D] load failed')
+                    self.msg_stack.append(lang.lang['cnmd.log.filenotfound'])
             elif cmd[1] == 'list':
-                temp = f'[D] node list:\n'
+                temp = f'{lang.lang['cnmd.node.nodelist']}\n'
                 for key,value in self.nodelist.items():
                     temp += f'{key} {value}\n'
                 self.msg_stack.append(temp.strip())
             elif cmd[1] == 'backward':
                 if len(self.msg) == 1:
-                    self.msg_stack.append('[D] unable to backward')
+                    self.msg_stack.append(lang.lang['cnmd.node.backwardunable'])
                 self.nodelist['temp'] = copy.deepcopy(self.msg)
                 try:
                     self.msg = self.msg[:-2*int(cmd[2])]
-                    self.msg_stack.append(f'[D] backward {cmd[2]} complete')
+                    self.msg_stack.append(f'{lang.lang['cnmd.node.backwardcount']}{cmd[2]}')
                 except:
                     self.msg = self.msg[:-2]
-                    self.msg_stack.append('[D] backward complete')
+                    self.msg_stack.append(lang.lang['cnmd.node.backward'])
             else:
-                self.msg_stack.append('[D] command not found')
+                self.msg_stack.append(lang.lang['cnmd.base.notfound'])
         elif cmd[0] == '#help':
             self.msg_stack.append(self.help_text)
             return
@@ -102,12 +104,12 @@ class CNMD():
             if cmd[1] == 'reasoning':
                 if cmd[2] == 'on' or cmd[2] == 'true' or cmd[2] == 'True' or cmd[2] == '1':
                     self.allow_reasoning = True
-                    self.msg_stack.append('[D] bot reasoning on')
+                    self.msg_stack.append(lang.lang['cnmd.bot.reasoningon'])
                 elif cmd[2] == 'off' or cmd[2] == 'false' or cmd[2] == 'False' or cmd[2] == '0':
                     self.allow_reasoning = False
-                    self.msg_stack.append('[D] bot reasoning off')
+                    self.msg_stack.append(lang.lang['cnmd.bot.reasoningoff'])
                 else:
-                    self.msg_stack.append('[D] command not found')
+                    self.msg_stack.append(lang.lang['cnmd.base.notfound'])
                     return
             elif cmd[1] == 'prompt':
                 self.set_prompt(cmd[2])
@@ -115,11 +117,11 @@ class CNMD():
                 self._reset()
                 return
             else:
-                self.msg_stack.append('[D] command not found')
+                self.msg_stack.append(lang.lang['cnmd.base.notfound'])
                 return
         elif cmd[0] == '#backup':
             fileedit.backup(self.config['base_path'])
-            self.msg_stack.append('[D] backup created')
+            self.msg_stack.append(lang.lang['cnmd.base.backup'])
             return
         elif cmd[0] == '#mem':
             if cmd[1] == 'save':
@@ -127,26 +129,26 @@ class CNMD():
                 for i in self.msg:
                     post.append(self.messages[i])
                 memory.save(post)
-                self.msg_stack.append('[D] memory saved')
+                self.msg_stack.append(lang.lang['cnmd.mem.save'])
                 return
             elif cmd[1] == 'analyse':
                 memory.analyse()
-                self.msg_stack.append('[D] memory saved')
+                self.msg_stack.append(lang.lang['cnmd.mem.analyse'])
         else:
-            self.msg_stack.append('[D] command not found')
+            self.msg_stack.append(lang.lang['cnmd.base.notfound'])
             return
     
     def _system_command(self,sys_cmd):
         if sys_cmd[0] == 'pass':
-            cmd = '[A] 请继续任务'
+            cmd = lang.lang['bot.base.missionpass']
         elif sys_cmd[0] == 'dir':
             path = sys_cmd[1]
             cmd = fileedit.dir(path)
-            self.msg_stack.append(f'[D] command [dir] [{path}] excuted')
+            self.msg_stack.append(f'{lang.lang['bot.agentlog.dir']}{path}')
         elif sys_cmd[0] == 'listdir':
             path = sys_cmd[1]
             cmd = fileedit.list_dir(path)
-            self.msg_stack.append(f'[D] command [listdir] [{path}] excuted')
+            self.msg_stack.append(f'{lang.lang['bot.agentlog.listdir']}{path}')
         elif sys_cmd[0] == 'read':
             path = sys_cmd[1]
             if len(path.split(maxsplit=1)) == 2:
@@ -154,76 +156,76 @@ class CNMD():
                 cmd = fileedit.read(path,int(c))
             else:
                 cmd = fileedit.read(path,0)
-            self.msg_stack.append(f'[D] command [read] [{path}] excuted')
+            self.msg_stack.append(f'{lang.lang['bot.agentlog.read']}{path}')
         elif sys_cmd[0] == 'write':
             sys_cmd = sys_cmd[1].split(maxsplit=1)
             path = sys_cmd[0]
             content = sys_cmd[1]
             cmd = fileedit.write(path,content)
-            self.msg_stack.append(f'[D] command [write] [{path}] excuted')
+            self.msg_stack.append(f'{lang.lang['bot.agentlog.write']}{path}')
         elif sys_cmd[0] == 'delete':
             path = sys_cmd[1]
             cmd = fileedit.delete(path)
-            self.msg_stack.append(f'[D] command [delete] [{path}] excuted')
+            self.msg_stack.append(f'{lang.lang['bot.agentlog.delete']}{path}')
         elif sys_cmd[0] == 'time':
             cmd = timer.timer()
-            self.msg_stack.append(f'[D] command [time] excuted')
+            self.msg_stack.append(lang.lang['bot.agentlog.time'])
         elif sys_cmd[0] == 'imread':
             path = sys_cmd[1]
             cmd = fileedit.encode(path,'#I#')
-            self.msg_stack.append(f'[D] command [image read] [{path}] excuted')
+            self.msg_stack.append(f'{lang.lang['bot.agentlog.imread']}{path}')
         elif sys_cmd[0] == 'auread':
             path = sys_cmd[1]
             cmd = fileedit.encode(path,'#A#')
-            self.msg_stack.append(f'[D] command [audio read] [{path}] excuted')
+            self.msg_stack.append(f'{lang.lang['bot.agentlog.auread']}{path}')
         elif sys_cmd[0] == 'viread':
             path = sys_cmd[1]
             cmd = fileedit.encode(path,'#V#')
-            self.msg_stack.append(f'[D] command [video read] [{path}] excuted')
+            self.msg_stack.append(f'{lang.lang['bot.agentlog.viread']}{path}')
         elif sys_cmd[0] == 'web':
             sys_cmd = sys_cmd[1].split(maxsplit=1)
             if sys_cmd[0] == 'grab':
                 cmd = webgrab.get_html(sys_cmd[1])
-                self.msg_stack.append(f'[D] command [webgrab] [{sys_cmd[1]}] excuted')
+                self.msg_stack.append(f'{lang.lang['bot.agentlog.webgrab']}{sys_cmd[1]}')
             if sys_cmd[0] == 'setheader':
                 header = json.loads(sys_cmd[1])
                 webgrab.headers = header
-                cmd = f'web header set {header}'
-                self.msg_stack.append(f'[D] command [webgetheader] [{header}] excuted')
+                cmd = f'{lang.lang['bot.agentlog.setheader']}{header}'
+                self.msg_stack.append(f'{lang.lang['bot.agentlog.setheader']}{header}')
             if sys_cmd[0] == 'ping':
                 cmd = webgrab.ping(sys_cmd[1])
-                self.msg_stack.append(f'[D] command [ping] [{sys_cmd[1]}] excuted')
+                self.msg_stack.append(f'{lang.lang['bot.agentlog.ping']}{sys_cmd[1]}')
         elif sys_cmd[0] == 'cmd':
             sys_cmd = sys_cmd[1].split(' ',maxsplit=1)
             if sys_cmd[0] == '-p':
                 runcmd.cmd_output=''
                 runcmd.pws(sys_cmd[1])
-                self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
+                self.msg_stack.append(f'{lang.lang['bot.agentlog.powershell']}{sys_cmd[1]}')
                 time.sleep(5)
                 cmd = copy.deepcopy(runcmd.cmd_output)
             if sys_cmd[0] == '-i':
                 runcmd.cmd_output=''
                 runcmd.cmd(sys_cmd[1].split())
-                self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
+                self.msg_stack.append(f'{lang.lang['bot.agentlog.cmd']}{sys_cmd[1]}')
                 time.sleep(5)
                 cmd = copy.deepcopy(runcmd.cmd_output)
             elif sys_cmd[0] == '-w':
                 runcmd.cmd_output=''
                 t = threading.Thread(target=runcmd.cmd, args=(sys_cmd[1].split(' '),))
                 t.start()
-                cmd = '[A] command excuted'
-                self.msg_stack.append(f'[D] command [{sys_cmd[1]}] excuted')
+                cmd = lang.lang['bot.tool.cmd']
+                self.msg_stack.append(f'{lang.lang['bot.agentlog.cmd']}{sys_cmd[1]}')
             elif sys_cmd[0] == '-o':
                 cmd = copy.deepcopy(runcmd.cmd_output)
-                self.msg_stack.append(f'[D] command [cmd output] excuted')
+                self.msg_stack.append(f'{lang.lang['bot.agentlog.cmdresult']}{sys_cmd[1]}')
         elif sys_cmd[0] == 'memory':
             mem = memory.mem_load(sys_cmd[1].strip().split())
             if mem != None:
-                cmd = '[A] 搜索结果：\n'
+                cmd = f'{lang.lang['bot.tool.memory']}\n'
                 for i in mem:
                     cmd += f'{i[0]}:{i[1]}\n'
             else:
-                cmd = '[A] 没有搜索到结果'
+                cmd = lang.lang['bot.tool.memorynone']
         elif sys_cmd[0] == 'msm':
             sys_cmd = sys_cmd[1].split(' ',maxsplit=1)
             if sys_cmd[0] == 'set':
@@ -231,8 +233,8 @@ class CNMD():
                 for i in m:
                     if m != '':
                         self.mission.append(i)
-                cmd = '[A] 已设置命令列表'
-                self.msg_stack.append(f'[D] command [mission set] excuted')
+                cmd = lang.lang['bot.agentlog.setmission']
+                self.msg_stack.append(lang.lang['bot.agentlog.setmission'])
             elif sys_cmd[0] == 'start':
                 self.is_mission = True
                 temp_nodelist = copy.deepcopy(self.nodelist)
@@ -240,10 +242,10 @@ class CNMD():
                 temp_messages = copy.deepcopy(self.messages)
                 temp_tic = copy.deepcopy(self.tic)
                 self._mission_init()
-                self.msg_stack.append(f'[D] command [mission start] excuted')
+                self.msg_stack.append(lang.lang['bot.agentlog.runmission'])
         elif sys_cmd[0] == 'quit':#msm
             if len(self.mission) != 0:
-                self.msg_stack.append(f'[D] command [mission quit] excuted')
+                self.msg_stack.append(lang.lang['bot.agentlog.quitmission'])
                 self._mission_init()
             else:
                 self.is_mission = False
@@ -252,9 +254,9 @@ class CNMD():
                 self.msg = copy.deepcopy(temp_msg)
                 self.tic = copy.deepcopy(temp_tic)
                 self.TIME_STAMP = round(time.time())
-                cmd = '[A] 全部子任务已完成'
+                cmd = lang.lang['bot.tool.missiondone']
         else:
-            cmd = '[A] command not found'
+            cmd = lang.lang['bot.tool.commandnotfound']
         return cmd
     
     def _reset(self):
@@ -268,7 +270,7 @@ class CNMD():
         ]
         self.msg = self.nodelist['init']
         self.tic = 1
-        self.msg_stack.append('[D] bot reset')
+        self.msg_stack.append(lang.lang['cnmd.bot.reset'])
 
     def set_prompt(self,p):
         self.prompt = prompt.load(p)
@@ -283,7 +285,7 @@ class CNMD():
         ]
         self.msg = self.nodelist['init']
         self.tic = 1
-        self.msg_stack.append('[D] bot prompt set')
+        self.msg_stack.append(lang.lang['cnmd.bot.setprompt'])
 
     def _mission_init(self):
         self.prompt = prompt.load('msm')
@@ -298,14 +300,14 @@ class CNMD():
         ]
         self.msg = self.nodelist['init']
         self.tic = 1
-        self.msg_stack.append('[D] bot mission mode set')
+        self.msg_stack.append(lang.lang['bot.agentlog.submission'])
 
     def CNMD(self,cmd):
         cmd_check = ''
         if cmd[0] == '#' and not self.is_mission:
             self._user_command(cmd)
             return
-        while True:
+        while True and self.mslock:
             if self.is_mission and len(self.mission) != 0:
                 cmd = self.mission.pop()
             if cmd[:3] == '#I#':
@@ -321,7 +323,7 @@ class CNMD():
                             },
                             {
                                 "type": "text",
-                                "text": "[A] 已读取图片"
+                                "text": lang.lang['bot.multimodel.imread']
                             }
                         ]
                     }
@@ -340,7 +342,7 @@ class CNMD():
                             },
                             {
                                 "type": "text",
-                                "text": "[A] 已读取音频"
+                                "text": lang.lang['bot.multimodel.auread']
                             }
                         ]
                     }
@@ -361,7 +363,7 @@ class CNMD():
                             },
                             {
                                 "type": "text",
-                                "text": "[A] 已读取视频"
+                                "text": lang.lang['bot.multimodel.viread']
                             }
                         ]
                     }
@@ -387,11 +389,11 @@ class CNMD():
                 if reasoning_content and self.allow_reasoning:
                     self.msg_stack.append(f'reasoning: {reasoning_content}')
             else:
-                content = '[D] response failed'
-                reasoning_content = '[D] response failed'
+                content = lang.lang['cnmd.bot.responsefail']
+                reasoning_content = lang.lang['cnmd.bot.responsefail']
             if '$$$' not in content and not self.is_mission:
                 if content == '':
-                    self.msg_stack.append('[D] response failed, try again.')
+                    self.msg_stack.append(lang.lang['cnmd.bot.responsefailcontinue'])
                 else:
                     self.msg_stack.append(content)
                 self.messages.append(
@@ -430,11 +432,11 @@ class CNMD():
                 try:
                     if cmd_check != '' and cmd_check == sys_cmd:
                         if self.stage_break and not self.is_mission:
-                            self.msg_stack.append(f'[D] command refused, stage terminated')
+                            self.msg_stack.append(lang.lang['cnmd.bot.refuse'])
                             break
                         else:
-                            self.msg_stack.append(f'[D] command refused')
-                            cmd = '[A] Agent已驳回重复指令，进行下一项任务。'
+                            self.msg_stack.append(lang.lang['cnmd.bot.refuse'])
+                            cmd = lang.lang['bot.tool.refuse']
                     else:
                         cmd_check = copy.deepcopy(sys_cmd)
                         sys_cmd = sys_cmd.split(' ',maxsplit=1)
@@ -444,8 +446,11 @@ class CNMD():
                                 break
                         cmd = self._system_command(sys_cmd)
                 except Exception as e:
-                    self.msg_stack.append(f'[D] {str(e)}')
-                    cmd = f'[A] {str(e)}'
+                    self.msg_stack.append(f'{lang.lang['cnmd.base.error']}{str(e)}')
+                    cmd = f'{lang.lang['bot.base.error']}{str(e)}'
+        if self.mslock == False:
+            self.mslock = True
+            self.msg_stack.append(lang.lang['cnmd.base.pause'])
         return
 
 def stack_print(stack):

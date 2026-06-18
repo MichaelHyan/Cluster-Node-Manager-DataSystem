@@ -4,6 +4,7 @@ import sys
 import time,requests
 import threading
 import CNMD
+import tools.lang as lang
 from wechat_port.weixin import (
     weixinApi, upload_media_to_cdn,
     DEFAULT_BASE_URL, CDN_BASE_URL,
@@ -246,7 +247,7 @@ class WeixinClient:
                     if sys_cmd[0] == 'timer':
                         self.send_text(self.from_user, content)
                         self.timer_mission(sys_cmd[1],sys_cmd[2])
-                        self.send_text(self.from_user, f"[D] 已创建事件触发器，将于{int(sys_cmd[1])-round(time.time())}s后触发")
+                        self.send_text(self.from_user, f'{lang.lang['cnmd.wechat.event']}{int(sys_cmd[1])-round(time.time())}')
                     elif sys_cmd[0] == 'send':
                         sender.send(self.from_user,'',self.token,sys_cmd[1])
                     elif sys_cmd[0] == 'response':
@@ -285,8 +286,8 @@ class WeixinClient:
                     text_content = text_item.get("text", "")
             if text_content:
                 print(f"\n[Weixin] from={from_user} content={text_content}")
-                if text_content.strip() == '#restart':
-                    self._restart_reply_thread()
+                if text_content.strip() == '#pause':
+                    cnm.mslock = False
                 else:
                     with self.msg_queue_lock:
                         self.msg_queue.append(text_content)
@@ -296,7 +297,7 @@ class WeixinClient:
             aes_key = raw_msg['item_list'][0]['image_item']['media']['aes_key']
             file_path = f'{round(time.time())}.jpg'
             downloader.download(full_url, encrypt_query_param, aes_key, file_path)
-            self.send_text(self.from_user, f'[D] 已保存图像')
+            self.send_text(self.from_user, lang.lang['cnmd.wechat.imagesave'])
         elif msg_type == 3:
             msg_id = str(raw_msg.get("message_id", raw_msg.get("seq", "")))
             if self._received_msgs.get(msg_id):
@@ -317,36 +318,19 @@ class WeixinClient:
             aes_key = raw_msg['item_list'][0]['file_item']['media']['aes_key']
             file_path = raw_msg.get('item_list', [{}])[0].get('file_item', {}).get('file_name')
             downloader.download(full_url, encrypt_query_param, aes_key, file_path)
-            self.send_text(self.from_user, f'[D] 已保存文件')
+            self.send_text(self.from_user, lang.lang['cnmd.wechat.filesave'])
         elif msg_type == 5:
             full_url = raw_msg['item_list'][0]['video_item']['media']['full_url']
             encrypt_query_param = raw_msg['item_list'][0]['video_item']['media']['encrypt_query_param']
             aes_key = raw_msg['item_list'][0]['video_item']['media']['aes_key']
             file_path = f'{round(time.time())}.mp4'
             downloader.download(full_url, encrypt_query_param, aes_key, file_path)
-            self.send_text(self.from_user, f'[D] 已保存视频')
+            self.send_text(self.from_user, lang.lang['cnmd.wechat.videosave'])
         else:
             print(f"[Weixin] 收到未知类型消息: {msg_type}")
 
-    def _restart_reply_thread(self):
-        """终止当前的回复线程并重新启动"""
-        print("[Weixin] 收到 #restart 指令，正在重启回复线程...")
-        self._stop_event.set()
-        
-        if self.reply_thread and self.reply_thread.is_alive():
-            self.reply_thread.join(timeout=3)
-            if self.reply_thread.is_alive():
-                print("[Weixin] 旧回复线程未能在规定时间内结束，已被强制忽略")
-        
-        with self.msg_queue_lock:
-            self.msg_queue.clear()
-            
-        self._stop_event.clear()
-        
-        self.reply_thread = threading.Thread(target=self._reply_loop, daemon=True)
-        self.reply_thread.start()
-        
-        self.send_text(self.from_user, "[D] 回复线程已重启")
+    def _run_cnm(self,m):
+        cnm.CNMD(m)
 
     def _reply_loop(self):
         """回复线程循环"""        
@@ -356,12 +340,8 @@ class WeixinClient:
                     if self.msg_queue:
                         msg = self.msg_queue.pop(0)
                         if msg[0] != '#' and self.xunsi:
-                            self.send_text(self.from_user, "[D] Agent开始寻思。")
-                        
-                        def _run_cnm(m):
-                            cnm.CNMD(m)
-                            
-                        cnm_thread = threading.Thread(target=_run_cnm, args=(msg,))
+                            self.send_text(self.from_user, lang.lang['cnmd.wechat.reason'])               
+                        cnm_thread = threading.Thread(target=self._run_cnm, args=(msg,))
                         cnm_thread.start()
                         
                         while cnm_thread.is_alive():

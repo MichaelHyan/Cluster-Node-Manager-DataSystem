@@ -8,6 +8,12 @@ with open('./prompt_loader/config.json',encoding='utf-8') as f:
 
 def load(prp):
     prompt = ''
+    try:
+        p = config[prp]
+    except:
+        p = None
+    if p == None:
+        prp = 'agent_base'
     if config[prp]['persona'] != 'none':
         with open(f'./prompt_loader/persona/{config[prp]['persona']}.md',encoding='utf-8') as f:
             prompt += f.read()

@@ -1,4 +1,5 @@
-import os,base64,shutil,subprocess
+import os,base64,shutil
+import tools.lang as lang
 SIZE_LIMIT = 1
 
 def dir(path):
@@ -35,7 +36,7 @@ def read(path,len = 0):
             return lines
         else:
             if file_size > SIZE_LIMIT * 1024 * 1024:
-                return f'[A] 文件过大 ({file_size} bytes)，超过{SIZE_LIMIT}MB限制，无法读取'
+                return f'{lang.lang['bot.tool.fileunreadable']}{file_size}/{SIZE_LIMIT} bytes'
             with open(path, 'r', encoding = 'utf-8') as f:
                 return f.read()
     except Exception as e:
@@ -50,7 +51,7 @@ def write(path, content):
         '''
         with open(path, 'w', encoding = 'utf-8') as f:
             f.write(content)
-        return '[A] write complete'
+        return lang.lang['bot.tool.filewritedone']
     except Exception as e:
         return str(e)
 
@@ -60,7 +61,7 @@ def delete(path):
             os.rmdir(path)
         elif os.path.isfile(path):
             os.remove(path)
-        return '[A] delete complete'
+        return lang.lang['bot.tool.filedeletedone']
     except Exception as e:
         return str(e)
 

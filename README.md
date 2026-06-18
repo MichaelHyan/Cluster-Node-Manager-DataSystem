@@ -49,6 +49,7 @@ pip install -r requirements.txt
     "BASE_URL": "api-base-url",
     "MODEL": "model-name",
     "base_path": "workspace-path",
+    "lang":"zh_cn",
     "break": true
 }
 ```
@@ -59,6 +60,7 @@ pip install -r requirements.txt
 | `BASE_URL` | API 基础 URL（支持任何 OpenAI 兼容接口） |
 | `MODEL` | 使用的模型名称 |
 | `base_path` | Agent 文件操作的根目录 |
+| `lang` | Agent 工具使用的语言，目前支持中文，英文，法语，俄语 |
 | `break` | 重复指令处理方式，`true` 为直接中断任务，`false` 为拒绝但继续 |
 
 你可以修改config_model.json对OpenAPI参数进行指定，如修改temperature:
@@ -150,6 +152,14 @@ python CNMD_webui.py
 
 > ⚠️ 如 5000 端口不可用，可尝试 8000/8080/3000 端口。由于使用 HTTP 协议，浏览器可能会显示安全提醒，属于正常现象。
 
+### CLI模式
+
+使用终端直接使用，可用于代码协助。
+
+允许多行输入，输入指令后回车键入空字符(打两次回车)将指令传达至CNMD，可拖拽文件将地址复制到shell
+
+允许使用#pause指令强制暂停工作。
+
 ### 微信模式
 
 通过微信 iLink Bot API 接入微信，实现微信内与 Agent 对话：
@@ -165,7 +175,7 @@ python CNMD_wechat.py
 - **文件自动下载**：接收的图片/文件/视频自动下载至 `./files/` 目录
 - **文件发送**：Agent 可通过 `send` 指令向用户发送文件
 - **定时提醒**：Agent 可创建定时器，到时自动发送提醒消息
-- **重启回复**：发送 `#restart` 可重启回复线程
+- **停止回复**：发送 `#pause` 可强制终止任务
 
 ## 🧩 技能模块系统
 

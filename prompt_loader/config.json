@@ -9,6 +9,11 @@
         "skills":"skill_base",
         "extra":"agent_base"
     },
+    "agent_cli":{
+        "persona":"agent_cli",
+        "skills":"skill_cli",
+        "extra":"agent_cli"
+    },
     "hyan":{
         "persona":"hyan",
         "skills":"skill_base",
