@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
 import uuid
+import webbrowser
 from datetime import datetime
 import threading
 import time
@@ -238,6 +239,7 @@ def msg_processor():
 if __name__ == '__main__':
     print("局域网通讯系统已启动")
     print("访问地址: http://localhost:5000")
+    webbrowser.open_new_tab('http://localhost:5000')
 
     sender_thread = threading.Thread(target=msg_sender, daemon=True)
     sender_thread.start()

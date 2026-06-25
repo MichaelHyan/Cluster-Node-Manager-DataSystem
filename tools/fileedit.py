@@ -1,8 +1,14 @@
 import os,base64,shutil
 import tools.lang as lang
+import json
+with open('config.json',encoding='utf-8') as f:
+    config = json.load(f)
+
 SIZE_LIMIT = 1
 
 def dir(path):
+    if not path:
+        path = config['base_path']
     try:
         all_items = os.listdir(path)
         dirs = []
@@ -93,6 +99,8 @@ def backup(src_dir, dst_dir='./bak/'):
 import os
 
 def list_dir(path):
+    if not path:
+        path = config['base_path']
     response = ''
     response += f"[DIR] {path}\n"
     try:

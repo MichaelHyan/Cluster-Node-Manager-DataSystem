@@ -1,8 +1,8 @@
-from tools import fileedit,runcmd,webgrab,timer,memory
+from tools import fileedit,memory
 from prompt_loader import prompt
+import tool_handler as tool
 import tools.bot as bot
 import tools.lang as lang
-import bruhlang
 import copy,json,time,threading,os
 enable_log = True
 
@@ -12,7 +12,14 @@ if not os.path.exists('./logs'):
     os.makedirs('./logs')
 if not os.path.exists('./bak'):
     os.makedirs('./bak')
-
+print(r'''
+    ___                                ___
+  //   \\ ||\\   || ||\\   ||\\   || ||   \\
+ ||       || \\  || || \\  || \\  || ||   ||
+ ||       ||  \\ || ||  \\ ||  \\ || ||   ||
+  \\___// ||   \\|| ||   \\||   \\|| ||___//
+======Cluster Node Manager DataSystem=======
+''')
 class CNMD():
     def __init__(self,prompt = prompt):
         with open('config.json',encoding='utf-8') as f:
@@ -138,86 +145,9 @@ class CNMD():
             self.msg_stack.append(lang.lang['cnmd.base.notfound'])
             return
     
-    def _system_command(self,sys_cmd):
+    def _system_command(self,sys_cmd,ori_cmd):
         if sys_cmd[0] == 'pass':
             cmd = lang.lang['bot.base.missionpass']
-        elif sys_cmd[0] == 'dir':
-            path = sys_cmd[1]
-            cmd = fileedit.dir(path)
-            self.msg_stack.append(f'{lang.lang['bot.agentlog.dir']}{path}')
-        elif sys_cmd[0] == 'listdir':
-            path = sys_cmd[1]
-            cmd = fileedit.list_dir(path)
-            self.msg_stack.append(f'{lang.lang['bot.agentlog.listdir']}{path}')
-        elif sys_cmd[0] == 'read':
-            path = sys_cmd[1]
-            if len(path.split(maxsplit=1)) == 2:
-                c,path = path.split(maxsplit=1)
-                cmd = fileedit.read(path,int(c))
-            else:
-                cmd = fileedit.read(path,0)
-            self.msg_stack.append(f'{lang.lang['bot.agentlog.read']}{path}')
-        elif sys_cmd[0] == 'write':
-            sys_cmd = sys_cmd[1].split(maxsplit=1)
-            path = sys_cmd[0]
-            content = sys_cmd[1]
-            cmd = fileedit.write(path,content)
-            self.msg_stack.append(f'{lang.lang['bot.agentlog.write']}{path}')
-        elif sys_cmd[0] == 'delete':
-            path = sys_cmd[1]
-            cmd = fileedit.delete(path)
-            self.msg_stack.append(f'{lang.lang['bot.agentlog.delete']}{path}')
-        elif sys_cmd[0] == 'time':
-            cmd = timer.timer()
-            self.msg_stack.append(lang.lang['bot.agentlog.time'])
-        elif sys_cmd[0] == 'imread':
-            path = sys_cmd[1]
-            cmd = fileedit.encode(path,'#I#')
-            self.msg_stack.append(f'{lang.lang['bot.agentlog.imread']}{path}')
-        elif sys_cmd[0] == 'auread':
-            path = sys_cmd[1]
-            cmd = fileedit.encode(path,'#A#')
-            self.msg_stack.append(f'{lang.lang['bot.agentlog.auread']}{path}')
-        elif sys_cmd[0] == 'viread':
-            path = sys_cmd[1]
-            cmd = fileedit.encode(path,'#V#')
-            self.msg_stack.append(f'{lang.lang['bot.agentlog.viread']}{path}')
-        elif sys_cmd[0] == 'web':
-            sys_cmd = sys_cmd[1].split(maxsplit=1)
-            if sys_cmd[0] == 'grab':
-                cmd = webgrab.get_html(sys_cmd[1])
-                self.msg_stack.append(f'{lang.lang['bot.agentlog.webgrab']}{sys_cmd[1]}')
-            if sys_cmd[0] == 'setheader':
-                header = json.loads(sys_cmd[1])
-                webgrab.headers = header
-                cmd = f'{lang.lang['bot.agentlog.setheader']}{header}'
-                self.msg_stack.append(f'{lang.lang['bot.agentlog.setheader']}{header}')
-            if sys_cmd[0] == 'ping':
-                cmd = webgrab.ping(sys_cmd[1])
-                self.msg_stack.append(f'{lang.lang['bot.agentlog.ping']}{sys_cmd[1]}')
-        elif sys_cmd[0] == 'cmd':
-            sys_cmd = sys_cmd[1].split(' ',maxsplit=1)
-            if sys_cmd[0] == '-p':
-                runcmd.cmd_output=''
-                runcmd.pws(sys_cmd[1])
-                self.msg_stack.append(f'{lang.lang['bot.agentlog.powershell']}{sys_cmd[1]}')
-                time.sleep(5)
-                cmd = copy.deepcopy(runcmd.cmd_output)
-            if sys_cmd[0] == '-i':
-                runcmd.cmd_output=''
-                runcmd.cmd(sys_cmd[1].split())
-                self.msg_stack.append(f'{lang.lang['bot.agentlog.cmd']}{sys_cmd[1]}')
-                time.sleep(5)
-                cmd = copy.deepcopy(runcmd.cmd_output)
-            elif sys_cmd[0] == '-w':
-                runcmd.cmd_output=''
-                t = threading.Thread(target=runcmd.cmd, args=(sys_cmd[1].split(' '),))
-                t.start()
-                cmd = lang.lang['bot.tool.cmd']
-                self.msg_stack.append(f'{lang.lang['bot.agentlog.cmd']}{sys_cmd[1]}')
-            elif sys_cmd[0] == '-o':
-                cmd = copy.deepcopy(runcmd.cmd_output)
-                self.msg_stack.append(f'{lang.lang['bot.agentlog.cmdresult']}{sys_cmd[1]}')
         elif sys_cmd[0] == 'memory':
             mem = memory.mem_load(sys_cmd[1].strip().split())
             if mem != None:
@@ -256,7 +186,9 @@ class CNMD():
                 self.TIME_STAMP = round(time.time())
                 cmd = lang.lang['bot.tool.missiondone']
         else:
-            cmd = lang.lang['bot.tool.commandnotfound']
+            toolcall = tool.tool(ori_cmd)
+            cmd = toolcall['sys']
+            self.msg_stack.append(toolcall['cli'])
         return cmd
     
     def _reset(self):
@@ -381,8 +313,6 @@ class CNMD():
             for i in self.msg:
                 post.append(self.messages[i])
             response = bot.reply(post)
-            #response = {'content':input('>>>'),'reasoning_content':'bruhhhh'}
-            #response = {'content':bruhlang.next(),'reasoning_content':'bruhhhh'}
             if response:
                 content = response.get('content')
                 reasoning_content = response.get('reasoning_content')
@@ -444,7 +374,7 @@ class CNMD():
                             self.msg_stack.append(content)
                             if not self.is_mission:
                                 break
-                        cmd = self._system_command(sys_cmd)
+                        cmd = self._system_command(sys_cmd,cmd_check)
                 except Exception as e:
                     self.msg_stack.append(f'{lang.lang['cnmd.base.error']}{str(e)}')
                     cmd = f'{lang.lang['bot.base.error']}{str(e)}'
@@ -459,7 +389,9 @@ def stack_print(stack):
             item = stack.pop(0)
             print(item)
         time.sleep(0.5)
+
 if __name__ == '__main__':
+    enable_log = False
     CNM = CNMD()
     t = threading.Thread(target=stack_print,args=(CNM.msg_stack,),daemon=True)
     t.start()

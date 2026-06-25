@@ -28,7 +28,7 @@ class WeixinClient:
         self._get_updates_buf = ""
         self._credentials_path = os.path.expanduser(DEFAULT_CREDENTIALS_PATH)
         self._current_qr_url = ""
-        
+
         self.msg_queue = []
         self.msg_queue_lock = threading.Lock()
         self.reply_thread = None
