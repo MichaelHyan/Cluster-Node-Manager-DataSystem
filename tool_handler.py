@@ -6,6 +6,7 @@ def tool(function):
     except:
         args = None
     func = globals().get(function)
+    print(args)
     if func:
         result = func(args)
     else:
@@ -27,11 +28,7 @@ def listdir(path:str):
             'cli':f'{lang.lang['bot.agentlog.listdir']}{path}'}
 
 def read(args:str):
-    if len(args.split(maxsplit=1)) == 2:
-        c,path = args.split(maxsplit=1)
-        sys = fileedit.read(path,int(c))
-    else:
-        sys = fileedit.read(args,0)
+    sys = fileedit.read(args)
     return {'sys':sys,
             'cli':f'{lang.lang['bot.agentlog.read']}{args}'}
 
