@@ -6,7 +6,6 @@ def tool(function):
     except:
         args = None
     func = globals().get(function)
-    print(args)
     if func:
         result = func(args)
     else:
