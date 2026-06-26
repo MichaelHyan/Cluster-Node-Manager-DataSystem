@@ -1,7 +1,7 @@
 {
-    "API_KEY":"sk-e61145141919810aa6b252160153c599",
-    "BASE_URL":"https://api.deepseek.com/v1",
-    "MODEL":"deepseek-v4-flash",
+    "API_KEY":"sk-59160153",
+    "BASE_URL":"https://api.xiaomimimo.com/v1",
+    "MODEL":"mimo-v2.5",
     "base_path":"D:/git/Cluster-Node-Manager-DataSystem/",
     "lang":"zh_cn",
     "break": true

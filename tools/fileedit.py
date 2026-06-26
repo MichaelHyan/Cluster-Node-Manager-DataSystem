@@ -6,7 +6,7 @@ with open('config.json',encoding='utf-8') as f:
 
 SIZE_LIMIT = 1
 
-def dir(path):
+def dir(path:str):
     if not path:
         path = config['base_path']
     try:
@@ -28,23 +28,24 @@ def dir(path):
     except Exception as e:
         return str(e)
 
-def read(path,len = 0):
+def read(path:str):
+    if len(path.split(maxsplit=2)) == 1:
+        path,p0,p1 = path,0,0
+    else:
+        p0,p1,path = path.split(maxsplit=2)
+        p0 = int(p0)
+        p1 = int(p1)
     try:
         file_size = os.path.getsize(path)
-        if len != 0:
-            lines = ''
-            with open(path, 'r', encoding='utf-8') as file:
-                for i in range(len):
-                    line = file.readline()
-                    if not line:
-                        break
-                    lines += f'{line}'
-            return lines
-        else:
-            if file_size > SIZE_LIMIT * 1024 * 1024:
-                return f'{lang.lang['bot.tool.fileunreadable']}{file_size}/{SIZE_LIMIT} bytes'
-            with open(path, 'r', encoding = 'utf-8') as f:
-                return f.read()
+        if file_size > SIZE_LIMIT * 1024 * 1024:
+            return f'{lang.lang['bot.tool.fileunreadable']}{file_size}/{SIZE_LIMIT} bytes'
+        with open(path, 'r', encoding = 'utf-8') as f:
+            lines = f.readlines()
+        if p0 == 0:
+            p0 = 1
+        if p1 == 0 or p1 < p0:
+            p1 = len(lines)
+        return ''.join(lines[p0-1:p1])
     except Exception as e:
         return str(e)
 

@@ -269,7 +269,7 @@ class CNMD():
                                 "type": "input_audio",
                                 "input_audio": {
                                     "data": cmd[3:],
-                                    "format": "mp3"
+                                    "format": "audio/mp3"
                                 }
                             },
                             {
@@ -351,7 +351,7 @@ class CNMD():
                 self.msg.append(self.tic)
                 self.tic += 1
                 try:
-                    sys_cmd = content.split('$$$')[1]
+                    sys_cmd = content.split('$$$',maxsplit=1)[1]
                 except:
                     sys_cmd = 'pass '
                 if enable_log:
