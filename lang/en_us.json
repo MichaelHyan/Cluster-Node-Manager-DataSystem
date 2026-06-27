@@ -1,5 +1,5 @@
 {
-    "cnmd.base.notfound":"[U] command not found",
+    "cnmd.base.notfound":"[U] command not found, do you mean:",
     "cnmd.base.backup":"[U] backup created",
     "cnmd.base.error":"[D] exception error: ",
     "cnmd.base.pause":"[D] reply paused",
@@ -22,6 +22,7 @@
     "cnmd.bot.refuse":"[U] command refused, stage terminated",
     "cnmd.mem.save":"[U] memory saved",
     "cnmd.mem.analyse":"[U] memory analysed",
+    "cnmd.mem.search":"[U] searching memory",
     "cnmd.bot.toolfail":"[U] Agent tool call failed: ",
     "cnmd.downloader.saved":"[U] file saved",
     "cnmd.downloader.error":"[U] exception error: ",

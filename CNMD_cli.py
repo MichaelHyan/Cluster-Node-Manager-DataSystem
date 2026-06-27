@@ -1,5 +1,5 @@
 import CNMD
-import threading,time,copy
+import threading,time,copy,os
 cnm = CNMD.CNMD()
 cnm.set_prompt('agent_cli')
 
@@ -15,8 +15,8 @@ def input_thread():
                 print('='*44)
             elif user_input == '#pause':
                 cnm.mslock = False
-            elif '#exit' in user_input:
-                break
+            elif user_input == '#exit':
+                os._exit(0)
             elif user_input == '' and input_list == '':
                 pass
             else:

@@ -20,6 +20,22 @@ print(r'''
   \\___// ||   \\|| ||   \\||   \\|| ||___//
 ======Cluster Node Manager DataSystem=======
 ''')
+
+USR_COMMAND = [
+    '#help',
+    '#node save',
+    '#node load',
+    '#node list',
+    '#node backward',
+    '#backup',
+    '#help',
+    '#bot reasoning',
+    '#bot reset',
+    '#bot prompt',
+    '#mem save',
+    '#mem analyse'
+    ]
+
 class CNMD():
     def __init__(self,prompt = prompt):
         with open('config.json',encoding='utf-8') as f:
@@ -59,9 +75,51 @@ class CNMD():
 3. Agent命令
 #bot reasoning <状态>     - 开关返回思考内容 (状态可选: on/true/True/1 或 off/false/False/0)
 #bot reset                - 清空对话记录
-#bot prompt <人设名>      - 切换人设（测试接口）'''
+#bot prompt <人设名>      - 切换人设（测试接口）
 
+4. 记忆能力
+#mem save                 - 总结记忆
+#mem analyse              - 整理记忆'''
+
+    def _similarity(self,str1, str2):
+        set1 = set(str1)
+        set2 = set(str2)
+        intersection = set1 & set2
+        union = set1 | set2
+        if not union:
+            return 1.0 if not intersection else 0.0
+        return len(intersection) / len(union)
+
+    def _correction(self,str):
+        s = {}
+        for i in USR_COMMAND:
+            s[i] = self._similarity(str,i)
+        self.msg_stack.append(f'{lang.lang['cnmd.base.notfound']}{max(s,key=s.get)}')
+
+    def _compress_number(self,s):
+        st = ''
+        for i in s:
+            st += str(i)
+        s = st
+        result = []
+        start = 0
+        for i in range(1, len(s)):
+            if ord(s[i]) - ord(s[i-1]) != 1:
+                segment = s[start:i]
+                if len(segment) > 1:
+                    result.append(f"{segment[0]}-{segment[-1]}")
+                else:
+                    result.append(segment)
+                start = i
+        last_segment = s[start:]
+        if len(last_segment) > 1:
+            result.append(f"{last_segment[0]}-{last_segment[-1]}")
+        else:
+            result.append(last_segment)
+        return ",".join(result)
+    
     def _user_command(self,cmd):
+        ori_cmd = copy.deepcopy(cmd)
         cmd = cmd.split()
         if cmd[0] == '#node':
             if cmd[1] == 'save':
@@ -90,7 +148,7 @@ class CNMD():
             elif cmd[1] == 'list':
                 temp = f'{lang.lang['cnmd.node.nodelist']}\n'
                 for key,value in self.nodelist.items():
-                    temp += f'{key} {value}\n'
+                    temp += f'{key} [{self._compress_number(value)}]\n'
                 self.msg_stack.append(temp.strip())
             elif cmd[1] == 'backward':
                 if len(self.msg) == 1:
@@ -103,10 +161,9 @@ class CNMD():
                     self.msg = self.msg[:-2]
                     self.msg_stack.append(lang.lang['cnmd.node.backward'])
             else:
-                self.msg_stack.append(lang.lang['cnmd.base.notfound'])
+                self._correction(ori_cmd)
         elif cmd[0] == '#help':
             self.msg_stack.append(self.help_text)
-            return
         elif cmd[0] == '#bot':
             if cmd[1] == 'reasoning':
                 if cmd[2] == 'on' or cmd[2] == 'true' or cmd[2] == 'True' or cmd[2] == '1':
@@ -116,20 +173,16 @@ class CNMD():
                     self.allow_reasoning = False
                     self.msg_stack.append(lang.lang['cnmd.bot.reasoningoff'])
                 else:
-                    self.msg_stack.append(lang.lang['cnmd.base.notfound'])
-                    return
+                    self._correction(ori_cmd)
             elif cmd[1] == 'prompt':
                 self.set_prompt(cmd[2])
             elif cmd[1] == 'reset':
                 self._reset()
-                return
             else:
-                self.msg_stack.append(lang.lang['cnmd.base.notfound'])
-                return
+                self._correction(ori_cmd)
         elif cmd[0] == '#backup':
             fileedit.backup(self.config['base_path'])
             self.msg_stack.append(lang.lang['cnmd.base.backup'])
-            return
         elif cmd[0] == '#mem':
             if cmd[1] == 'save':
                 post = []
@@ -137,25 +190,17 @@ class CNMD():
                     post.append(self.messages[i])
                 memory.save(post)
                 self.msg_stack.append(lang.lang['cnmd.mem.save'])
-                return
             elif cmd[1] == 'analyse':
                 memory.analyse()
                 self.msg_stack.append(lang.lang['cnmd.mem.analyse'])
+            else:
+                self._correction(ori_cmd)
         else:
-            self.msg_stack.append(lang.lang['cnmd.base.notfound'])
-            return
+            self._correction(ori_cmd)
     
     def _system_command(self,sys_cmd,ori_cmd):
         if sys_cmd[0] == 'pass':
             cmd = lang.lang['bot.base.missionpass']
-        elif sys_cmd[0] == 'memory':
-            mem = memory.mem_load(sys_cmd[1].strip().split())
-            if mem != None:
-                cmd = f'{lang.lang['bot.tool.memory']}\n'
-                for i in mem:
-                    cmd += f'{i[0]}:{i[1]}\n'
-            else:
-                cmd = lang.lang['bot.tool.memorynone']
         elif sys_cmd[0] == 'msm':
             sys_cmd = sys_cmd[1].split(' ',maxsplit=1)
             if sys_cmd[0] == 'set':

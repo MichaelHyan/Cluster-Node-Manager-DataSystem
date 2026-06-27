@@ -1,5 +1,5 @@
 {
-    "cnmd.base.notfound":"[U] 未找到命令",
+    "cnmd.base.notfound":"[U] 未找到命令，你是否在找：",
     "cnmd.base.backup":"[U] 已创建备份",
     "cnmd.base.error":"[D] 遇到错误: ",
     "cnmd.base.pause":"[D] 回复停止",
@@ -23,6 +23,7 @@
     "cnmd.bot.toolfail":"[U] Agent指令调用失败：",
     "cnmd.mem.save":"[U] 已保存记忆",
     "cnmd.mem.analyse":"[U] 已整理记忆",
+    "cnmd.mem.search":"[U] 查询记忆",
     "cnmd.downloader.saved":"[U] 文件已保存",
     "cnmd.downloader.error":"[U] 遇到错误: ",
     "cnmd.wechat.event":"[U] 已设置时间触发器, 触发事件间隔: ",

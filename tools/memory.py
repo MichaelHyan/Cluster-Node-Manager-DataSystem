@@ -1,11 +1,11 @@
 import json
 import tools.bot as bot
 def mem_save(dict):
-    with open(r'.\database\mem.json','r', encoding='utf-8') as f:
+    with open('./database/mem.json','r', encoding='utf-8') as f:
         data = json.load(f)
     for k,y in dict.items():
         data[k] = y
-    with open(r'.\database\mem.json','w',encoding='utf-8') as f:
+    with open('./database/mem.json','w',encoding='utf-8') as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
 def similarity(str1, str2):
@@ -19,20 +19,37 @@ def similarity(str1, str2):
 
 import json
 
-def mem_load(keyx,rematch = False):
-    with open(r'.\database\mem.json', 'r', encoding='utf-8') as f:
+def mem_load(keyx,rematch = False,relate = False):
+    with open('./database/mem.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
     dat = {}
     for k in data.keys():
         dat[k] = 0
     for i in keyx:
-        for k in data.keys():
+        for k,v in data.items():
             dat[k] += similarity(k, i)
+            dat[k] += 0.5*similarity(v, i)
     sorted_items = sorted(dat.items(), key=lambda x: x[1], reverse=True)
     result = []
     for k, score in sorted_items:
-        if score > 0:
+        if score > 0.0001:
             result.append([k, data[k], score])
+    if relate:
+        with open('./database/relate.json', 'r', encoding='utf-8') as f:
+            r = json.load(f)
+        key = []
+        keya = []
+        for i in result:
+            key.append(i[0])
+        for k,v in r.items():
+            for i in v:
+                if i in key and k not in keya:
+                    keya.append(k)
+                    continue
+        for i in keya:
+            for k in r[i]:
+                if k not in key:
+                    result.append([k,data[k],0])
     if not result and rematch:
         matched = match(keyx)
         if matched != None:
@@ -42,7 +59,7 @@ def mem_load(keyx,rematch = False):
 
 
 def analyse():
-    with open(r'.\database\mem.json','r',encoding='utf-8') as f:
+    with open('./database/mem.json','r',encoding='utf-8') as f:
         data = json.load(f)
     f = ''
     for k,y in data.items():
@@ -84,8 +101,48 @@ def analyse():
         if i:
             k = i.split('=>')
             c[k[0]] = k[1]
-    print(c)
-    with open(r'.\database\mem.json','w',encoding='utf-8') as f:
+    with open('./database/mem.json','w',encoding='utf-8') as f:
+        json.dump(c, f, indent=4, ensure_ascii=False)
+    #relation
+    f = ''
+    for i in c.keys():
+        f += f'{i}\n'
+    content=f'''请整理同类信息，严格按照以下格式输出总结内容。
+你需要严格按照以下格式输出，不能输出额外的内容：
+信息1=>分类1
+信息2=>分类2
+
+你需要以以下规则整理信息：
+1. 对于指代对象相同的信息指定到同一类
+2. 格式为[信息关键词]=>[类型]
+3. 每个信息按换行符分割
+3. 只允许输出整理结果
+
+举例：输入：
+用户名 姓名 职业 昨日信息 
+
+输出：
+用户名=>用户
+姓名=>用户
+职业=>用户
+昨日信息=>历史信息
+
+以下是需要整理的字段：
+{f}
+'''
+    c=[{
+        "role":"user",
+        "content": content
+    }]
+    reply = bot.reply(c)['content']
+    c = {}
+    for i in reply.split('\n'):
+        if i:
+            k = i.split('=>')
+            if k[1] not in c.keys():
+                c[k[1]] = []
+            c[k[1]].append(k[0])
+    with open('./database/relate.json','w',encoding='utf-8') as f:
         json.dump(c, f, indent=4, ensure_ascii=False)
 
 def save(x):
@@ -140,7 +197,7 @@ $$$
 
 def match(x):
     words = ''
-    with open(r'.\database\mem.json','r', encoding='utf-8') as f:
+    with open('./database/mem.json','r', encoding='utf-8') as f:
         data = json.load(f)
     for i in data.keys():
         words +=f'{i}\n'
@@ -156,7 +213,6 @@ def match(x):
         "content": content
     }]
     reply = bot.reply(content)
-    print(reply)
     reply = reply['content']
     if '没有' in reply:
         return None
