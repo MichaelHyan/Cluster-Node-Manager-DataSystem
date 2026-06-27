@@ -96,26 +96,21 @@ class CNMD():
             s[i] = self._similarity(str,i)
         self.msg_stack.append(f'{lang.lang['cnmd.base.notfound']}{max(s,key=s.get)}')
 
-    def _compress_number(self,s):
-        st = ''
-        for i in s:
-            st += str(i)
-        s = st
+    def _compress_number(self,nums):
         result = []
-        start = 0
-        for i in range(1, len(s)):
-            if ord(s[i]) - ord(s[i-1]) != 1:
-                segment = s[start:i]
-                if len(segment) > 1:
-                    result.append(f"{segment[0]}-{segment[-1]}")
+        start = nums[0]
+        for i in range(1, len(nums)):
+            if nums[i] != nums[i-1] + 1:
+                end = nums[i-1]
+                if start == end:
+                    result.append(str(start))
                 else:
-                    result.append(segment)
-                start = i
-        last_segment = s[start:]
-        if len(last_segment) > 1:
-            result.append(f"{last_segment[0]}-{last_segment[-1]}")
+                    result.append(f"{start}-{end}")
+                start = nums[i]
+        if start == nums[-1]:
+            result.append(str(start))
         else:
-            result.append(last_segment)
+            result.append(f"{start}-{nums[-1]}")
         return ",".join(result)
     
     def _user_command(self,cmd):
