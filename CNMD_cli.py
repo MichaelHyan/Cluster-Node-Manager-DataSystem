@@ -41,7 +41,7 @@ def process_thread():
             first_element = cnm.msg_stack.pop(0)
             print(f">{first_element}")
             if not cnm.msg_stack:
-                print('='*44)
+                print('='*38)
         time.sleep(0.1)
 
 if __name__ == "__main__":

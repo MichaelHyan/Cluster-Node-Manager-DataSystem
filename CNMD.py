@@ -13,12 +13,12 @@ if not os.path.exists('./logs'):
 if not os.path.exists('./bak'):
     os.makedirs('./bak')
 print(r'''
-    ___                                ___
-  //   \\ ||\\   || ||\\   ||\\   || ||   \\
- ||       || \\  || || \\  || \\  || ||   ||
- ||       ||  \\ || ||  \\ ||  \\ || ||   ||
-  \\___// ||   \\|| ||   \\||   \\|| ||___//
-======Cluster Node Manager DataSystem=======
+    ___                          ___
+  //   \\ |\\  || |\\  |\\  || ||   \\
+ ||       ||\\ || ||\\ ||\\ || ||   ||
+ ||       || \\|| || \\|| \\|| ||   ||
+  \\___// ||  \|| ||  \||  \|| ||___//
+===Cluster Node Manager DataSystem====
 ''')
 
 USR_COMMAND = [
@@ -448,5 +448,5 @@ if __name__ == '__main__':
     t = threading.Thread(target=stack_print,args=(CNM.msg_stack,),daemon=True)
     t.start()
     while True:
-        cmd = input('============================================\n')
+        cmd = input('======================================\n')
         CNM.CNMD(cmd)
