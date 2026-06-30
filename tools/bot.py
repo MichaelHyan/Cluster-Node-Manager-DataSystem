@@ -1,13 +1,21 @@
-import os,json
+import json
 from openai import OpenAI
-with open('config.json',encoding='utf-8') as f:
-    config = json.load(f)
-with open('config_model.json',encoding='utf-8') as f:
-    config_model = json.load(f)
-client = OpenAI(
-    api_key=config['API_KEY'],
-    base_url=config['BASE_URL']
-)
+
+config = {}
+config_model = {}
+client = OpenAI(api_key='API_KEY',
+                base_url='BASE_URL')
+
+def reload():
+    global config,config_model,client
+    with open('config.json',encoding='utf-8') as f:
+        config = json.load(f)
+    with open('config_model.json',encoding='utf-8') as f:
+        config_model = json.load(f)
+    client = OpenAI(
+        api_key=config['API_KEY'],
+        base_url=config['BASE_URL']
+    )
 
 def reply(message):
     try:
@@ -39,3 +47,4 @@ def reply(message):
     except Exception as e:
         print(str(e))
         return None
+reload()

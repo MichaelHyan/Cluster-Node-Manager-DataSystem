@@ -16,6 +16,7 @@
     "cnmd.bot.reasoningoff":"[U] 禁用Agent思考显示",
     "cnmd.bot.setprompt":"[U] 已设置系统提示词",
     "cnmd.bot.reset":"[U] 已重置Agent",
+    "cnmd.bot.reload":"[U] 已重载模型参数",
     "cnmd.bot.responsefail":"[U] Agent回复失败",
     "cnmd.bot.responsefailcontinue":"[U] Agent回复失败, 请重试",
     "cnmd.bot.refuseloot":"[U] 已驳回命令",

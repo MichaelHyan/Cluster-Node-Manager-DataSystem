@@ -16,6 +16,7 @@
     "cnmd.bot.reasoningoff":"[U] bot reasoning off",
     "cnmd.bot.setprompt":"[U] bot prompt set",
     "cnmd.bot.reset":"[U] bot reset",
+    "cnmd.bot.reload":"[U] model reload",
     "cnmd.bot.responsefail":"[U] bot response failed",
     "cnmd.bot.responsefailcontinue":"[U] bot response failed,tryagain",
     "cnmd.bot.refuseloot":"[U] command refused",

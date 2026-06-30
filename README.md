@@ -136,10 +136,12 @@ pip install -r requirements.txt
 | `#node load <名称>` | 从指定节点加载对话状态 |
 | `#node list` | 列出所有已保存的节点 |
 | `#node backward <轮数>` | 回退指定轮数的对话（默认1轮） |
+| `#node backwardms` | 回退一次事件 |
 | `#mem save` | 提取当前对话的关键信息并保存到记忆数据库 |
 | `#mem analyse` | 调用 LLM 对记忆数据库进行整理、去重和压缩 |
 | `#bot reasoning on/off` | 开关思考内容返回 |
 | `#bot reset` | 清空对话记录 |
+| `#bot reload` | 重置模型参数(API热更新) |
 | `#bot prompt <预设名>` | 切换系统提示词预设（包含 persona、skills、extra 三个模块） |
 | `#backup` | 备份当前工作目录 |
 | `#help` | 显示帮助信息 |
@@ -151,7 +153,7 @@ pip install -r requirements.txt
 最基础的模式，在终端中直接与 CNMD 交互：
 
 ```bash
-python CNMD_cli.py
+python CNMD_cli.py [预设提示词]
 ```
 
 使用终端直接使用，可用于代码协助。
@@ -159,6 +161,8 @@ python CNMD_cli.py
 允许多行输入，输入指令后回车键入空字符（打两次回车）将指令传达至 CNMD，可拖拽文件将地址复制到 shell。
 
 允许使用 `#pause` 指令强制暂停当前任务。
+
+在CLI模式，如果仅输入python CNMD_cli.py，会启动CLI模式默认提示词，如果你有自己的自定义预设，可以在后面加入你的预设名。
 
 ### Web UI 模式
 

@@ -1,9 +1,13 @@
 import CNMD
-import threading,time,copy,os
-cnm = CNMD.CNMD()
-cnm.set_prompt('agent_cli')
+import threading,time,copy,os,argparse
 
 input_list = ''
+parser = argparse.ArgumentParser()
+parser.add_argument('name', nargs='?', default='agent_cli')
+args = parser.parse_args()
+
+cnm = CNMD.CNMD()
+cnm.set_prompt(args.name)
 
 def input_thread():
     global input_list,cnm

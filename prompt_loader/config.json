@@ -19,8 +19,18 @@
         "skills":"skill_base",
         "extra":"none"
     },
+    "question":{
+        "persona":"question",
+        "skills":"none",
+        "extra":"none"
+    },
     "neko":{
         "persona":"neko",
+        "skills":"none",
+        "extra":"none"
+    },
+    "yachiyo":{
+        "persona":"yachiyo",
         "skills":"none",
         "extra":"none"
     }

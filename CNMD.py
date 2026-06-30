@@ -27,10 +27,12 @@ USR_COMMAND = [
     '#node load',
     '#node list',
     '#node backward',
+    '#node backwardms',
     '#backup',
     '#help',
     '#bot reasoning',
     '#bot reset',
+    '#bot reload'
     '#bot prompt',
     '#mem save',
     '#mem analyse'
@@ -57,6 +59,7 @@ class CNMD():
         self.allow_reasoning = False
         self.allow_cmd = []
         self.mslock = True
+        self.mstemp = []
         
         self.mission = []
         self.is_mission = False
@@ -67,6 +70,7 @@ class CNMD():
 #node load <节点名称>      - 从内存中加载指定节点的对话状态
 #node list                - 列出所有已保存的节点
 #node backward <轮数>     - 回退指定轮数的对话（默认回退1轮）
+#node backwardms          - 回退一次事件操作
 
 2. 系统命令
 #backup                   - 备份当前工作目录
@@ -75,6 +79,7 @@ class CNMD():
 3. Agent命令
 #bot reasoning <状态>     - 开关返回思考内容 (状态可选: on/true/True/1 或 off/false/False/0)
 #bot reset                - 清空对话记录
+#bot reload               - 重载模型参数
 #bot prompt <人设名>      - 切换人设（测试接口）
 
 4. 记忆能力
@@ -128,7 +133,7 @@ class CNMD():
                 else:
                     self.msg_stack.append(f'{lang.lang['cnmd.node.nodenotfound']}')
             elif cmd[1] == 'loadf':
-                temp = self.nodelist.get(cmd[2])
+                temp = cmd[2]
                 if temp:
                     try:
                         with open(f'./logs/{temp}.json','r',encoding='utf-8') as f:
@@ -136,7 +141,7 @@ class CNMD():
                         with open(f'./logs/{temp}_node.json','r',encoding='utf-8') as f:
                             self.nodelist = json.load(f)
                         self.msg_stack.append(lang.lang['cnmd.log.loadcomplete'])
-                    except:
+                    except Exception as e:
                         self.msg_stack.append(lang.lang['cnmd.log.filenotfound'])
                 else:
                     self.msg_stack.append(lang.lang['cnmd.log.filenotfound'])
@@ -155,6 +160,9 @@ class CNMD():
                 except:
                     self.msg = self.msg[:-2]
                     self.msg_stack.append(lang.lang['cnmd.node.backward'])
+            elif cmd[1] == 'backwardms':
+                self.msg = copy.deepcopy(self.mstemp)
+                self.msg_stack.append(lang.lang['cnmd.node.backward'])
             else:
                 self._correction(ori_cmd)
         elif cmd[0] == '#help':
@@ -173,6 +181,9 @@ class CNMD():
                 self.set_prompt(cmd[2])
             elif cmd[1] == 'reset':
                 self._reset()
+            elif cmd[1] == 'reload':
+                bot.reload()
+                self.msg_stack.append(lang.lang['cnmd.bot.reload'])
             else:
                 self._correction(ori_cmd)
         elif cmd[0] == '#backup':
@@ -279,6 +290,7 @@ class CNMD():
         if cmd[0] == '#' and not self.is_mission:
             self._user_command(cmd)
             return
+        self.mstemp = copy.deepcopy(self.msg)
         while True and self.mslock:
             if self.is_mission and len(self.mission) != 0:
                 cmd = self.mission.pop()
@@ -436,5 +448,5 @@ if __name__ == '__main__':
     t = threading.Thread(target=stack_print,args=(CNM.msg_stack,),daemon=True)
     t.start()
     while True:
-        cmd = input('=======================================================================\n')
+        cmd = input('============================================\n')
         CNM.CNMD(cmd)
