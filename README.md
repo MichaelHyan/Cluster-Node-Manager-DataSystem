@@ -1,12 +1,6 @@
 # 集群节点式对话管理系统
-<pre>
-     ___                          ___
-   //   \\ |\\  || |\\  |\\  || ||   \\
-  ||       ||\\ || ||\\ ||\\ || ||   ||
-  ||       || \\|| || \\|| \\|| ||   ||
-   \\___// ||  \|| ||  \||  \|| ||___//
- ===Cluster Node Manager DataSystem====
-</pre>
+
+![](https://github.com/MichaelHyan/Cluster-Node-Manager-DataSystem/blob/main/title.png)
 
 ## 📖 项目简介
 
