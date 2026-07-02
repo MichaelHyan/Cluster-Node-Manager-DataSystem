@@ -16,7 +16,7 @@ def input_thread():
             user_input = input()
             if user_input == '' and input_list != '':
                 threading.Thread(target=agent_thread).start()
-                print('='*44)
+                print('='*38)
             elif user_input == '#pause':
                 cnm.mslock = False
             elif user_input == '#exit':

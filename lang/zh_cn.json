@@ -7,6 +7,7 @@
     "cnmd.node.loadcomplete":"[U] 节点已加载: ",
     "cnmd.node.nodenotfound":"[U] 未找到节点",
     "cnmd.node.nodelist":"[U] 节点列表:\n",
+    "cnmd.log.savecomplete":"[U] 已保存本地记忆",
     "cnmd.log.loadcomplete":"[U] 已加载本地记忆",
     "cnmd.node.backwardcount":"[U] 回退节点成功:",
     "cnmd.node.backwardunable":"[U] 回退节点失败",

@@ -24,6 +24,11 @@
         "skills":"none",
         "extra":"none"
     },
+    "none":{
+        "persona":"none",
+        "skills":"none",
+        "extra":"none"
+    },
     "neko":{
         "persona":"neko",
         "skills":"none",

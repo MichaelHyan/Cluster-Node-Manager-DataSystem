@@ -129,6 +129,8 @@ pip install -r requirements.txt
 | `#node save <名称>` | 保存当前对话状态到指定节点 |
 | `#node load <名称>` | 从指定节点加载对话状态 |
 | `#node list` | 列出所有已保存的节点 |
+| `#node savef <名称>` | 将当前上下文和工具调用记录保存到本地 |
+| `#node loadf <名称>` | 从指定本地上下文文件载入 |
 | `#node backward <轮数>` | 回退指定轮数的对话（默认1轮） |
 | `#node backwardms` | 回退一次事件 |
 | `#mem save` | 提取当前对话的关键信息并保存到记忆数据库 |

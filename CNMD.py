@@ -54,6 +54,7 @@ class CNMD():
                 "content":self.prompt
             }
         ]
+        self.toolcall = ['none']
         self.msg = self.nodelist['init']
         self.tic = 1
         self.allow_reasoning = False
@@ -132,6 +133,21 @@ class CNMD():
                     self.msg_stack.append(f'{lang.lang['cnmd.node.loadcomplete']}{cmd[2]}')
                 else:
                     self.msg_stack.append(f'{lang.lang['cnmd.node.nodenotfound']}')
+            elif cmd[1] == 'savef':
+                temp = cmd[2]
+                if temp:
+                    try:
+                        with open(f'./logs/{temp}.json','w',encoding='utf-8') as f:
+                            json.dump(self.messages,f,indent=4,ensure_ascii=False)
+                        with open(f'./logs/{temp}_node.json','w',encoding='utf-8') as f:
+                            json.dump(self.nodelist,f,indent=4,ensure_ascii=False)
+                        with open(f'./logs/{temp}_tool.json','w',encoding='utf-8') as f:
+                            json.dump(self.toolcall,f,indent=4,ensure_ascii=False)
+                        self.msg_stack.append(lang.lang['cnmd.log.savecomplete'])
+                    except Exception as e:
+                        self.msg_stack.append(lang.lang['cnmd.log.filenotfound'])
+                else:
+                    self.msg_stack.append(lang.lang['cnmd.log.filenotfound'])
             elif cmd[1] == 'loadf':
                 temp = cmd[2]
                 if temp:
@@ -140,6 +156,8 @@ class CNMD():
                             self.messages = json.load(f)
                         with open(f'./logs/{temp}_node.json','r',encoding='utf-8') as f:
                             self.nodelist = json.load(f)
+                        with open(f'./logs/{temp}_tool.json','r',encoding='utf-8') as f:
+                            self.toolcall = json.load(f)
                         self.msg_stack.append(lang.lang['cnmd.log.loadcomplete'])
                     except Exception as e:
                         self.msg_stack.append(lang.lang['cnmd.log.filenotfound'])
@@ -281,6 +299,7 @@ class CNMD():
                 "content":self.prompt
             }
         ]
+        self.toolcall = ['none']
         self.msg = self.nodelist['init']
         self.tic = 1
         self.msg_stack.append(lang.lang['bot.agentlog.submission'])
@@ -386,10 +405,13 @@ class CNMD():
                 )
                 self.msg.append(self.tic)
                 self.tic += 1
+                self.toolcall.append('none')
                 with open(f'./logs/{self.TIME_STAMP}.json','w',encoding='utf-8') as f:
                     json.dump(self.messages,f,indent=4,ensure_ascii=False)
                 with open(f'./logs/{self.TIME_STAMP}_node.json','w',encoding='utf-8') as f:
                     json.dump(self.nodelist,f,indent=4,ensure_ascii=False)
+                with open(f'./logs/{self.TIME_STAMP}_tool.json','w',encoding='utf-8') as f:
+                    json.dump(self.toolcall,f,indent=4,ensure_ascii=False)
                 break
             else:
                 if content.split('$$$')[0] != '':
@@ -404,13 +426,17 @@ class CNMD():
                 self.tic += 1
                 try:
                     sys_cmd = content.split('$$$',maxsplit=1)[1]
+                    self.toolcall.append(sys_cmd)
                 except:
                     sys_cmd = 'pass '
+                    self.toolcall.append('none')
                 if enable_log:
                     with open(f'./logs/{self.TIME_STAMP}.json','w',encoding='utf-8') as f:
                         json.dump(self.messages,f,indent=4,ensure_ascii=False)
                     with open(f'./logs/{self.TIME_STAMP}_node.json','w',encoding='utf-8') as f:
                         json.dump(self.nodelist,f,indent=4,ensure_ascii=False)
+                    with open(f'./logs/{self.TIME_STAMP}_tool.json','w',encoding='utf-8') as f:
+                        json.dump(self.toolcall,f,indent=4,ensure_ascii=False)
                 try:
                     if cmd_check != '' and cmd_check == sys_cmd:
                         if self.stage_break and not self.is_mission:
