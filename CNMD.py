@@ -12,14 +12,14 @@ if not os.path.exists('./logs'):
     os.makedirs('./logs')
 if not os.path.exists('./bak'):
     os.makedirs('./bak')
-print(r'''
+LOGO = r'''
     ___                          ___
   //   \\ |\\  || |\\  |\\  || ||   \\
  ||       ||\\ || ||\\ ||\\ || ||   ||
  ||       || \\|| || \\|| \\|| ||   ||
   \\___// ||  \|| ||  \||  \|| ||___//
 ===Cluster Node Manager DataSystem====
-''')
+'''
 
 USR_COMMAND = [
     '#help',

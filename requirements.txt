@@ -4,3 +4,4 @@ flask-socketio
 requests
 pycryptodome
 qrcode
+colorama
